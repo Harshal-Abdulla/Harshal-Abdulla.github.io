@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<title>Harshal Abdulla CV</title>
+<style>
+  /* ---------------------------------------------------------------------
+     Print-first. Dark backgrounds are for the website; a CV gets printed,
+     forwarded and parsed by keyword scanners, so this is black on white,
+     one column, real selectable text, and no images.
+     The layout is deliberately plain because the FORMAT IS NOT FINAL yet.
+     Restyle here; the content below should not need touching.
+  --------------------------------------------------------------------- */
+  @page { size: A4; margin: 13mm 14mm; }
+
+  :root { --ink:#111417; --soft:#4a5159; --rule:#d5d9dd; --accent:#B87309; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin:0; color:var(--ink); background:#fff;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 9.6pt; line-height: 1.42;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .name { font-size: 21pt; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .role { font-size: 10.2pt; color: var(--soft); margin: 2pt 0 0; }
+  .contact { font-size: 8.8pt; color: var(--soft); margin: 5pt 0 0; }
+  .contact span { white-space: nowrap; }
+  .sep { color: var(--rule); padding: 0 4pt; }
+
+  header { border-bottom: 2px solid var(--accent); padding-bottom: 7pt; }
+
+  h2 {
+    font-size: 8.6pt; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.09em; color: var(--accent);
+    margin: 13pt 0 5pt; padding-bottom: 2.5pt; border-bottom: 1px solid var(--rule);
+  }
+
+  .summary { margin: 8pt 0 0; }
+
+  .item { margin-bottom: 8pt; }
+  .item:last-child { margin-bottom: 0; }
+  .item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10pt; }
+  .item-title { font-weight: 700; font-size: 10pt; }
+  .item-meta { font-size: 8.6pt; color: var(--soft); white-space: nowrap; }
+  .item-sub { font-size: 9pt; color: var(--soft); margin-top: 1pt; }
+
+  ul { margin: 3.5pt 0 0; padding-left: 12pt; }
+  li { margin-bottom: 1.8pt; }
+
+  .stack { font-size: 8.6pt; color: var(--soft); margin-top: 3pt; }
+  .stack b { color: var(--ink); font-weight: 600; }
+
+  .skills { margin: 0; }
+  .skills div { margin-bottom: 2.5pt; }
+  .skills b { display: inline-block; min-width: 92pt; font-weight: 700; }
+
+  /* Anything still to be supplied is loud on purpose, so a draft cannot be
+     sent out by accident. */
+  .todo {
+    background: #FFF3D6; border: 1px dashed var(--accent);
+    color: #6b4a00; padding: 1pt 4pt; border-radius: 3px;
+    font-size: 8.6pt; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="name">Harshal Abdulla</h1>
+  <p class="role">Associate / graduate software engineer &middot; backend-leaning full stack</p>
+  <p class="contact">
+    <span>Leixlip, Co. Kildare, Ireland</span><span class="sep">|</span>
+    <span>harshalabdulla1999@gmail.com</span><span class="sep">|</span>
+    <span>github.com/Harshal-Abdulla</span><span class="sep">|</span>
+    <span>linkedin.com/in/harshalabdulla</span>
+  </p>
+</header>
+
+<p class="summary">
+  MSc Computer Science graduate who builds systems where being wrong is expensive.
+  I built and maintain a commercial ordering system that takes real money in a
+  restaurant every day, and wrote the property-based test suite that proves its
+  pricing is correct. Looking for an associate or graduate software engineer role
+  in Ireland. Available now.
+</p>
+
+<h2>Selected projects</h2>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">Restaurant ordering and till system</span>
+    <span class="item-meta">Commercial, sole developer &middot; 2026</span>
+  </div>
+  <div class="item-sub">Client system running daily in a restaurant in Co. Kildare</div>
+  <ul>
+    <li>Built four surfaces (customer kiosk, kitchen till, table service, admin) from one
+        Expo codebase against one Postgres database, in seven weeks, as the only developer.</li>
+    <li>Put pricing and entitlement rules in plpgsql behind <i>security definer</i> so all four
+        surfaces get the same answer and no client can bypass the till. Around 70 Postgres
+        functions behind row level security across 94 migrations.</li>
+    <li>Removed the application server entirely: static hosting plus row level security, with
+        the client talking to Postgres through PostgREST and RLS as the security boundary.</li>
+    <li>Money is integer euro cents with no floating point in pricing. Order lines are immutable
+        snapshots and corrections are soft deletes, so history is never rewritten.</li>
+    <li>Wrote a property-based test suite from scratch with no test framework and no
+        dependencies: 43 properties, 560,015 generated cases per run in about a second, seeded
+        so any failure replays exactly.</li>
+    <li>Measured an order-dependent pricing effect across 20,000 baskets, showed the owner the
+        numbers, and locked the guarantee it rests on into a test that runs on every change.</li>
+    <li>154 commits. 15,109 lines of TypeScript. 251 orders and 1,474 dishes in August 2026.</li>
+  </ul>
+  <p class="stack"><b>Stack:</b> TypeScript 5.9, React 19.2, React Native, Expo SDK 54, Zustand,
+    PostgreSQL via Supabase, row level security, pg_cron
+    &nbsp;&middot;&nbsp; Demo: order-dependent-pricing.surge.sh</p>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">Fault-tolerant notification system</span>
+    <span class="item-meta">Personal &middot; in progress, around 80%</span>
+  </div>
+  <ul>
+    <li>Distributed delivery pipeline built so a message is never silently lost and never sent
+        twice, even when the broker, database or consumer crashes mid-flight.</li>
+    <li>Producer writes a PENDING row to Postgres <i>before</i> publishing to Kafka, so a crash
+        between the two leaves a durable record that a recovery sweep picks up.</li>
+    <li>Consumer reads row status before acting (SELECT before UPDATE), which makes it idempotent
+        by design and absorbs Kafka's at-least-once duplicates as a no-op.</li>
+    <li>Exponential backoff with a dead-letter queue, and retry counters held in Redis rather
+        than process memory so restarts and parallel consumers cannot break the count.</li>
+  </ul>
+  <p class="stack"><b>Stack:</b> Python, Apache Kafka, PostgreSQL, Redis, Docker Compose
+    &nbsp;&middot;&nbsp; github.com/Harshal-Abdulla/Kafka-Notification-System</p>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">Sketchpad Retro</span>
+    <span class="item-meta">Individual MSc project &middot; 2025</span>
+  </div>
+  <ul>
+    <li>Browser rebuild of Ivan Sutherland's 1963 Sketchpad, with the constraint solver, geometry
+        engine and undo/redo stack all written from scratch and the interface drawn in SVG.</li>
+    <li>Constraints including parallelism, perpendicularity, equal length and fixed distance,
+        plus snapping, zooming, symbols and instances, and state persisted via JSON and local storage.</li>
+  </ul>
+  <p class="stack"><b>Stack:</b> Next.js 14, React, TypeScript, SVG</p>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">Twix</span>
+    <span class="item-meta">Group MSc project, team of five &middot; 2025</span>
+  </div>
+  <ul>
+    <li>Led a team of five building a real-time chat application. My own share of the work was
+        the interface and the testing.</li>
+    <li>Based the layout on Twitter so all five of us had a single reference to build against,
+        rather than designing the interface from scratch and arguing about it.</li>
+    <li>Schema designed to stay consistent with several people connected and sending at once.</li>
+  </ul>
+  <p class="stack"><b>Stack:</b> Java, WebSockets, PostgreSQL, React, TypeScript, Vite, Axios, Bootstrap</p>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">SyncUp</span>
+    <span class="item-meta">Group MSc project &middot; 2025</span>
+  </div>
+  <ul>
+    <li>Kanban task tool: register, log in, and move tasks across To Do, In Progress and Done.
+        Full CRUD over a REST API, with password hashing using bcryptjs.</li>
+  </ul>
+  <p class="stack"><b>Stack:</b> Node.js, Express, MongoDB, React</p>
+</div>
+
+<h2>Experience</h2>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">Frontend Engineer, Cofount Labs LLP</span>
+    <span class="item-meta">September 2023 &ndash; August 2024 &middot; Remote</span>
+  </div>
+  <ul>
+    <li>Built and shipped client-facing web applications for agency clients.</li>
+  </ul>
+</div>
+
+<h2>Education</h2>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">MSc Computer Science (Software Engineering)</span>
+    <span class="item-meta">2024 &ndash; 2025</span>
+  </div>
+  <div class="item-sub">Maynooth University, Ireland &middot; First Class Honours</div>
+  <p class="stack">Software testing and quality assurance, requirements engineering and system
+    design, advanced object-oriented programming and scalable systems, distributed systems,
+    applied cryptography, deep learning foundations.</p>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">B.Tech Computer Science and Technology</span>
+    <span class="item-meta">2019 &ndash; 2023</span>
+  </div>
+  <div class="item-sub">Jyothi Engineering College, Kerala, India</div>
+</div>
+
+<h2>Certifications</h2>
+<div class="item">
+  <div class="item-head">
+    <span class="item-title">Microsoft Certified: Azure Fundamentals (AZ-900)</span>
+    <span class="item-meta">March 2026</span>
+  </div>
+</div>
+
+<h2>Technical skills</h2>
+<div class="skills">
+  <div><b>Languages</b> TypeScript, JavaScript, Python, SQL</div>
+  <div><b>Frontend</b> React, React Native, Next.js, Expo, Zustand, Tailwind CSS</div>
+  <div><b>Backend &amp; data</b> Node.js, Express, PostgreSQL, Supabase, MongoDB, Redis, REST</div>
+  <div><b>Infrastructure</b> Apache Kafka, Docker Compose, GitHub Actions, Git</div>
+  <div><b>Testing</b> Property-based testing, test design, row level security policy testing</div>
+</div>
+
+</body>
+</html>

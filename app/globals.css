@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Fonts. Self-hosted from /public/fonts, Latin subset, never a CDN.
+   A font CDN is an outage this site does not control and a GDPR complication
+   it does not need.
+--------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-latin-variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------------------
+   Tokens. Part 5.3.
+--------------------------------------------------------------------------- */
+
+:root {
+  --bg: #0B0E14;
+  --bg-raised: #10141C;
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-strong: rgba(255, 255, 255, 0.07);
+  --stroke: rgba(255, 255, 255, 0.10);
+  --stroke-bright: rgba(255, 255, 255, 0.18);
+  --text: #F0EEE9;
+  --dim: #A2A9B8;
+  --accent: #F0A538;
+  --accent-hover: #FFB84D;
+  --ok: #7FBF8F;
+  --fail: #D97757;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --nav-h: 68px;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Anchor links land below the floating nav rather than under it. */
+  scroll-padding-top: calc(var(--nav-h) + 24px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(240, 165, 56, 0.28);
+  color: var(--text);
+}
+
+/* Focus. The default outline is removed only where something more visible
+   replaces it. Part 7. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------------------------------------------------------------------------
+   The ambient field. Part 5.2.
+   A warm amber core falling through a cool violet into the base colour, over a
+   faint technical grid masked out toward the edges. Pure CSS: no image, no
+   canvas, no WebGL, no particles. It costs nothing and cannot fail.
+--------------------------------------------------------------------------- */
+
+.ambient-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
+.ambient-field__glow {
+  position: absolute;
+  left: 50%;
+  top: -18vh;
+  width: min(1500px, 165vw);
+  height: min(1100px, 130vh);
+  margin-left: calc(min(1500px, 165vw) / -2);
+  background:
+    radial-gradient(
+      50% 50% at 50% 42%,
+      rgba(240, 165, 56, 0.15) 0%,
+      rgba(240, 165, 56, 0.075) 26%,
+      rgba(126, 96, 200, 0.055) 55%,
+      rgba(11, 14, 20, 0) 78%
+    );
+  filter: blur(12px);
+  will-change: transform;
+  animation: ambient-drift 54s ease-in-out infinite;
+}
+
+.ambient-field__grid {
+  position: absolute;
+  inset: -1px;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.045) 0 1px,
+      transparent 1px 72px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.045) 0 1px,
+      transparent 1px 72px
+    );
+  -webkit-mask-image: radial-gradient(
+    62% 52% at 50% 20%,
+    #000 0%,
+    rgba(0, 0, 0, 0.45) 48%,
+    transparent 82%
+  );
+  mask-image: radial-gradient(
+    62% 52% at 50% 20%,
+    #000 0%,
+    rgba(0, 0, 0, 0.45) 48%,
+    transparent 82%
+  );
+}
+
+/* Small amplitude on a long loop. If a visitor notices it moving it is too
+   much, so this is deliberately close to subliminal. */
+@keyframes ambient-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-3.5%, 2.2%, 0) scale(1.06); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* ---------------------------------------------------------------------------
+   Components.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  /* The signature surface. Part 5.5. Defined once, reused everywhere. */
+  .panel {
+    position: relative;
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    border-radius: 18px;
+    backdrop-filter: blur(24px) saturate(1.1);
+    -webkit-backdrop-filter: blur(24px) saturate(1.1);
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      transform 180ms ease;
+  }
+
+  /* The light-catching edge: a 1px inset highlight along the top, brightest at
+     the centre. This is what separates a glass surface from a translucent box. */
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.22) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  .panel--hover:hover {
+    background: var(--glass-strong);
+    border-color: var(--stroke-bright);
+    transform: translateY(-2px);
+  }
+
+  /* Keyboard users get the same affordance as mouse users. */
+  .panel--hover:focus-within {
+    background: var(--glass-strong);
+    border-color: var(--stroke-bright);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-ligatures: none;
+  }
+
+  /* Prose measure. Part 5.4: never more than 75 characters per line. */
+  .prose-measure {
+    max-width: 68ch;
+  }
+
+  .prose-measure p {
+    margin-bottom: 1.15rem;
+  }
+
+  .prose-measure p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Fallback for browsers without backdrop-filter: a solid raised fill, which
+   still reads as deliberate rather than broken. */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .panel {
+    background: var(--bg-raised);
+  }
+
+  .panel--hover:hover {
+    background: #161b25;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion. Part 5.6 rule 3.
+   Every animated element renders in its final resting state, not a degraded
+   one. This backstops the JavaScript checks so it holds even before hydration.
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .ambient-field__glow {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
