@@ -21,6 +21,7 @@ export default function SketchpadCaseStudy() {
         status={project.status}
         stack="Next.js 14 · React · TypeScript · SVG"
         links={[
+          { label: "Try the simulator", href: project.demoUrl },
           { label: "Repository", href: project.repoUrl },
           { label: "Individual MSc project", note: "Maynooth University, 2025" },
         ]}
@@ -53,10 +54,9 @@ export default function SketchpadCaseStudy() {
               </p>
             </div>
 
-            {/* A diagram rather than a screenshot. There is no recording of the
-                real thing yet, and a placeholder box would be worse than an
-                honest illustration of what a constraint actually does.
-                TODO(harshal): replace with a short recording of the real app. */}
+            {/* A diagram rather than a screenshot. It explains what a constraint
+                does in one glance, which a screenshot of the canvas does not, and
+                the real thing is one click away at the top of this page. */}
             <Panel className="mt-8 p-6 sm:p-8">
               <p className="mono text-meta text-[var(--dim)]">
                 What a constraint means here

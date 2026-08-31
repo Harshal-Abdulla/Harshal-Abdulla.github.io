@@ -81,8 +81,7 @@ export const PROJECTS: Project[] = [
       "A browser rebuild of Ivan Sutherland's 1963 Sketchpad. The constraint solver, the geometry engine and the undo stack are all written from scratch, and the whole interface is drawn and edited in SVG.",
       "Mostly a state problem rather than a styling one: keeping React coherent while a user draws, constrains and edits shapes that depend on each other.",
     ],
-    // TODO(harshal): once this is deployed somewhere, add `demoUrl` here and a
-    // "Live demo" link appears on the card and the case study automatically.
+    demoUrl: "https://harshal-abdulla.github.io/Sketchpad-Retro-Computing/simulator/",
     repoUrl: "https://github.com/Harshal-Abdulla/Sketchpad-Retro-Computing",
     repoLabel: "Repository",
   },
