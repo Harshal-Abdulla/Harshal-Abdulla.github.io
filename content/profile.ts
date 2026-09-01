@@ -50,7 +50,7 @@ export const PROFILE = {
 
   email: "harshalabdulla1999@gmail.com",
   github: "https://github.com/Harshal-Abdulla",
-  linkedin: "https://linkedin.com/in/harshalabdulla",
+  linkedin: "https://www.linkedin.com/in/harshal-abdulla",
 
   /**
    * CV download. Part 6.7.
