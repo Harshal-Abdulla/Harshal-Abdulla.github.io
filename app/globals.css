@@ -198,8 +198,20 @@ body {
   .frame {
     position: relative;
     border: 1px solid var(--stroke);
-    background: rgba(255, 255, 255, 0.015);
-    transition: border-color 180ms ease, background-color 180ms ease;
+    border-radius: 3px;
+    background: linear-gradient(
+      168deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.012) 100%
+    );
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 8px 24px -12px rgba(0, 0, 0, 0.7);
+    transition:
+      border-color 220ms ease,
+      box-shadow 220ms ease;
   }
 
   .frame--hover:hover {
@@ -224,18 +236,39 @@ body {
     color: var(--accent);
   }
 
-  /* The signature surface. Part 5.5. Defined once, reused everywhere. */
+  /*
+    The signature surface. Glass, but squared off and framed like a drawing:
+    the depth stays, the softness goes.
+
+    Four things give it weight, and it needs all four. A gradient fill rather
+    than a flat wash so the surface has a direction. A real blur so what is
+    behind it moves. An inset hairline on the top and left, which is how light
+    catches a physical edge. And a drop shadow deep enough to sit the panel off
+    the page rather than on it.
+  */
   .panel {
     position: relative;
-    background: var(--glass);
+    background:
+      linear-gradient(
+        168deg,
+        rgba(255, 255, 255, 0.055) 0%,
+        rgba(255, 255, 255, 0.022) 42%,
+        rgba(255, 255, 255, 0.012) 100%
+      );
     border: 1px solid var(--stroke);
-    border-radius: 2px;
-    backdrop-filter: blur(24px) saturate(1.1);
-    -webkit-backdrop-filter: blur(24px) saturate(1.1);
+    border-radius: 3px;
+    backdrop-filter: blur(26px) saturate(1.35);
+    -webkit-backdrop-filter: blur(26px) saturate(1.35);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 1px 0 0 rgba(255, 255, 255, 0.035),
+      0 1px 2px rgba(0, 0, 0, 0.5),
+      0 12px 34px -12px rgba(0, 0, 0, 0.75);
     transition:
-      background-color 180ms ease,
-      border-color 180ms ease,
-      transform 180ms ease;
+      background-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   /* The light-catching edge: a 1px inset highlight along the top, brightest at
@@ -245,20 +278,26 @@ body {
     position: absolute;
     inset: 0 0 auto 0;
     height: 1px;
-    border-radius: 2px 2px 0 0;
+    border-radius: 3px 3px 0 0;
     background: linear-gradient(
       to right,
       transparent 0%,
-      rgba(255, 255, 255, 0.22) 50%,
+      rgba(255, 255, 255, 0.3) 50%,
       transparent 100%
     );
     pointer-events: none;
   }
 
   .panel--hover:hover {
-    background: var(--glass-strong);
     border-color: var(--stroke-bright);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.11),
+      inset 1px 0 0 rgba(255, 255, 255, 0.05),
+      0 2px 4px rgba(0, 0, 0, 0.5),
+      0 26px 54px -16px rgba(0, 0, 0, 0.85),
+      /* the accent catching the panel edge as it lifts */
+      0 0 0 1px rgba(240, 165, 56, 0.08);
   }
 
   /* Keyboard users get the same affordance as mouse users. */
@@ -325,5 +364,136 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Decode: the per-character headline wave.
+
+   Pure CSS so it costs one class and an inline animation-delay per character
+   rather than a JavaScript timer or a Framer node. It also means the animation
+   still runs with JS disabled, which is the state the page is designed to
+   survive.
+--------------------------------------------------------------------------- */
+.decode__word {
+  display: inline-block;
+  /* Words are the break opportunity. Characters inside one never split. */
+  white-space: nowrap;
+}
+
+.decode__char {
+  display: inline-block;
+  animation: decode-in 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes decode-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.34em) scaleY(1.06);
+    filter: blur(7px);
+  }
+  60% {
+    filter: blur(0.6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+/* The animation is the enhancement. Reduced motion gets the text, immediately,
+   with no transform and no delay left over from the inline style. */
+@media (prefers-reduced-motion: reduce) {
+  .decode__char {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Depth restored. The squared-off blueprint language was costing the surfaces
+   their weight, so the accent, the corner marks and the lift all get it back.
+--------------------------------------------------------------------------- */
+
+/* The accent button reads as lit rather than filled: a warm cast beneath it,
+   and a brighter inset edge along the top. */
+.accent-lit {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 10px 26px -10px rgba(240, 165, 56, 0.55);
+  transition:
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.accent-lit:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 18px 40px -10px rgba(240, 165, 56, 0.72);
+}
+
+/* Corner marks draw themselves in rather than appearing complete, so the frame
+   reads as being measured out. */
+.marks::before {
+  animation: mark-draw-tl 780ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.marks::after {
+  animation: mark-draw-br 780ms cubic-bezier(0.16, 1, 0.3, 1) 130ms both;
+}
+
+/* Each mark grows outward from the corner it actually sits in. Sharing one
+   keyframe would make the bottom-right mark draw from its top-left edge, which
+   reads as sliding rather than being drawn. */
+@keyframes mark-draw-tl {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 100% 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes mark-draw-br {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0 100%);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marks::before,
+  .marks::after {
+    animation: none;
+    opacity: 1;
+    clip-path: none;
+  }
+}
+
+/* Print gets the finished state, never the starting one. A decode that has not
+   run leaves every character at opacity 0, and animation time does not advance
+   in a print context, so without this the headline prints blank. */
+@media print {
+  .decode__char,
+  .marks::before,
+  .marks::after {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    clip-path: none !important;
   }
 }

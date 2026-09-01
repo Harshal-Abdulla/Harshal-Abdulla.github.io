@@ -1,4 +1,6 @@
 import { ArrowDown, ArrowUpRight, Download } from "lucide-react";
+import { Decode } from "@/components/motion/Decode";
+import { Scramble } from "@/components/motion/Scramble";
 import { PROFILE } from "@/content/profile";
 import { PROJECTS, ALSO_BUILT } from "@/content/projects";
 import Button from "@/components/ui/Button";
@@ -23,7 +25,7 @@ export default function Home() {
             area it is describing. */}
         <div className="marks border border-[var(--stroke)] px-5 py-8 sm:px-10 sm:py-12">
           <h1 className="text-hero max-w-[16ch] font-semibold text-[var(--text)] sm:max-w-[18ch]">
-            {PROFILE.headline}
+            <Decode text={PROFILE.headline} />
           </h1>
 
           <p className="mt-6 max-w-[60ch] text-body-lg text-[var(--dim)]">
@@ -41,11 +43,11 @@ export default function Home() {
               className="h-[7px] w-[7px] shrink-0 rounded-full bg-[var(--ok)]"
               aria-hidden="true"
             />
-            {PROFILE.availability}
+            <Scramble text={PROFILE.availability} />
           </p>
 
           <div className="flex gap-3">
-            <Button href="#work" className="marks flex-1 sm:flex-none">
+            <Button href="#work" className="marks accent-lit flex-1 sm:flex-none">
               See the work
               <ArrowDown size={16} aria-hidden="true" />
             </Button>
