@@ -100,16 +100,31 @@ export default function Home() {
                     <p key={line.slice(0, 24)}>{line}</p>
                   ))}
                 </div>
-                {item.repoUrl ? (
-                  <a
-                    href={item.repoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-button text-[15px] text-[var(--dim)] transition-colors hover:text-[var(--text)]"
-                  >
-                    Repository
-                    <ArrowUpRight size={15} aria-hidden="true" />
-                  </a>
+                {item.demoUrl || item.repoUrl ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                    {item.demoUrl ? (
+                      <a
+                        href={item.demoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-button text-[15px] font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+                      >
+                        Live demo
+                        <ArrowUpRight size={15} aria-hidden="true" />
+                      </a>
+                    ) : null}
+                    {item.repoUrl ? (
+                      <a
+                        href={item.repoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-button text-[15px] text-[var(--dim)] transition-colors hover:text-[var(--text)]"
+                      >
+                        Repository
+                        <ArrowUpRight size={15} aria-hidden="true" />
+                      </a>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ))}

@@ -241,7 +241,13 @@ export const NOTIFICATION_NEXT = [
    Also built
 ------------------------------------------------------------------------- */
 
-export const ALSO_BUILT = [
+export const ALSO_BUILT: {
+  title: string;
+  meta: string;
+  lines: string[];
+  demoUrl?: string;
+  repoUrl?: string;
+}[] = [
   {
     title: "Twix",
     // Harshal recalled 2024, the brief says 2025, and he could not remember
@@ -265,9 +271,11 @@ export const ALSO_BUILT = [
     lines: [
       "A kanban task tool built with Node.js, Express, MongoDB and React. Users register, log in, and move tasks across To Do, In Progress and Done.",
       "Full CRUD over a REST API, with password hashing using bcryptjs.",
-      // Claims nothing else. No JWT, no Docker, no role-based access control,
-      // no CI/CD, no FastAPI. Older CVs claim some of these. They are wrong.
+      // Claims nothing else. No Docker, no role-based access control, no CI/CD,
+      // no FastAPI. Older CVs claim some of these. They are wrong. JWT is fine
+      // to say: the auth routes issue and verify tokens.
     ],
+    demoUrl: "https://sync-up-rosy-psi.vercel.app",
     repoUrl: "https://github.com/Harshal-Abdulla/SyncUp",
   },
 ];
