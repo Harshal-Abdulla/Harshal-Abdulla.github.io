@@ -22,7 +22,7 @@ export default function CaseSection({
       <Reveal>
         <h2
           id={`${id}-heading`}
-          className="text-section font-semibold text-[var(--text)]"
+          className="marks inline-block pb-1 pl-3 pr-6 pt-1 text-section font-semibold text-[var(--text)]"
         >
           {title}
         </h2>

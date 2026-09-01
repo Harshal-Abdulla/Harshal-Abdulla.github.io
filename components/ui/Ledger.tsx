@@ -30,7 +30,7 @@ export default function Ledger({
       className={`grid grid-cols-2 gap-x-6 gap-y-7 border-t border-[var(--stroke)] pt-6 ${cols} ${className}`.trim()}
     >
       {metrics.map((m) => (
-        <div key={m.label}>
+        <div key={m.label} className="border-l border-[var(--stroke)] pl-4">
           <dd
             className={`mono text-[23px] leading-none tracking-tight ${
               m.tone === "ok"
@@ -42,7 +42,7 @@ export default function Ledger({
           >
             {countUp ? <CountUp value={m.value} /> : m.value}
           </dd>
-          <dt className="mt-2 text-meta text-[var(--dim)]">{m.label}</dt>
+          <dt className="mono mt-2 text-[11px] uppercase leading-snug tracking-[0.1em] text-[var(--dim)]">{m.label}</dt>
         </div>
       ))}
     </dl>

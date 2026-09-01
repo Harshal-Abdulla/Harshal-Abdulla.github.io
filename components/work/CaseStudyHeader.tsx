@@ -36,7 +36,8 @@ export default function CaseStudyHeader({
         All work
       </Link>
 
-      <h1 className="text-title mt-6 max-w-[20ch] font-semibold text-[var(--text)]">
+      <p className="eyebrow mt-8">Case study</p>
+      <h1 className="marks mt-4 inline-block max-w-[20ch] pb-1 pl-3 pr-6 pt-1 text-title font-semibold text-[var(--text)]">
         {title}
       </h1>
 
@@ -44,11 +45,11 @@ export default function CaseStudyHeader({
 
       <dl className="mt-8 grid gap-x-10 gap-y-5 border-t border-[var(--stroke)] pt-6 sm:grid-cols-[auto_1fr]">
         <div>
-          <dt className="text-meta text-[var(--dim)]">Status</dt>
+          <dt className="eyebrow">Status</dt>
           <dd className="mono mt-1.5 text-[13.5px] text-[var(--text)]">{status}</dd>
         </div>
         <div>
-          <dt className="text-meta text-[var(--dim)]">Stack</dt>
+          <dt className="eyebrow">Stack</dt>
           <dd className="mono mt-1.5 text-[13.5px] leading-relaxed text-[var(--text)]">
             {stack}
           </dd>

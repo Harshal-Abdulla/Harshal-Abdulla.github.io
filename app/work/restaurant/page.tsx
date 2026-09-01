@@ -108,7 +108,7 @@ export default function RestaurantCaseStudy() {
             <ol className="space-y-9">
               {RESTAURANT_DECISIONS.map((d) => (
                 <li key={d.n} className="grid gap-x-5 sm:grid-cols-[auto_1fr]">
-                  <span className="mono text-meta text-[var(--accent)]">{d.n}</span>
+                  <span className="index pt-1">{d.n}</span>
                   <div className="prose-measure">
                     <h3 className="text-sub font-semibold text-[var(--text)]">{d.title}</h3>
                     <p className="mt-2 text-body text-[var(--dim)]">{d.body}</p>

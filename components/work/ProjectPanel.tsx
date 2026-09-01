@@ -10,23 +10,35 @@ import { TagRow } from "@/components/ui/Tag";
  * grid. The restaurant panel is visibly the largest and richest, which is how
  * a visitor knows where to look first.
  */
-export default function ProjectPanel({ project }: { project: Project }) {
+export default function ProjectPanel({
+  project,
+  index,
+}: {
+  project: Project;
+  /** 1-based, shown as the drawing-style 01 / 02 / 03 index. */
+  index?: number;
+}) {
   const lead = project.lead === true;
 
   return (
     <Panel
       as="article"
       hover
-      className={lead ? "p-6 sm:p-9" : "p-6 sm:p-8"}
+      className={lead ? "marks p-6 sm:p-9" : "p-6 sm:p-8"}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
         <h3
           className={
             lead
-              ? "text-[clamp(24px,3vw,32px)] font-semibold leading-tight tracking-[-0.025em]"
-              : "text-sub font-semibold"
+              ? "flex items-baseline gap-3 text-[clamp(24px,3vw,32px)] font-semibold leading-tight tracking-[-0.025em]"
+              : "flex items-baseline gap-3 text-sub font-semibold"
           }
         >
+          {index ? (
+            <span className="index" aria-hidden="true">
+              {String(index).padStart(2, "0")}
+            </span>
+          ) : null}
           {project.title}
         </h3>
         <span className="mono text-meta text-[var(--dim)]">{project.status}</span>

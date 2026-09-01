@@ -116,7 +116,7 @@ export default function NotificationsCaseStudy() {
             <ol className="space-y-9">
               {NOTIFICATION_PROBLEMS.map((p) => (
                 <li key={p.n} className="grid gap-x-5 sm:grid-cols-[auto_1fr]">
-                  <span className="mono text-meta text-[var(--accent)]">{p.n}</span>
+                  <span className="index pt-1">{p.n}</span>
                   <div className="prose-measure">
                     <h3 className="text-sub font-semibold text-[var(--text)]">{p.title}</h3>
                     <p className="mt-2 text-body text-[var(--dim)]">{p.body}</p>

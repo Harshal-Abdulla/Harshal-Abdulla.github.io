@@ -19,35 +19,47 @@ export default function Home() {
           It is not wrapped in a Reveal: first paint shows the real text.
       --------------------------------------------------------------- */}
       <section className="mx-auto flex min-h-[100svh] max-w-shell flex-col justify-center px-5 pb-16 pt-28 sm:px-6 sm:pt-32">
-        <p className="panel mono mb-7 inline-flex w-fit items-center gap-2.5 rounded-full px-3.5 py-2 text-[12.5px] text-[var(--dim)]">
-          <span
-            className="h-[7px] w-[7px] shrink-0 rounded-full bg-[var(--ok)]"
-            aria-hidden="true"
-          />
-          {PROFILE.availability}
-        </p>
+        {/* The headline sits inside a marked frame, the way a drawing marks the
+            area it is describing. */}
+        <div className="marks border border-[var(--stroke)] px-5 py-8 sm:px-10 sm:py-12">
+          <h1 className="text-hero max-w-[16ch] font-semibold text-[var(--text)] sm:max-w-[18ch]">
+            {PROFILE.headline}
+          </h1>
 
-        <h1 className="text-hero max-w-[16ch] font-semibold text-[var(--text)] sm:max-w-[18ch]">
-          {PROFILE.headline}
-        </h1>
+          <p className="mt-6 max-w-[60ch] text-body-lg text-[var(--dim)]">
+            <span className="text-[var(--text)]">{PROFILE.supporting.lead}</span>
+            {PROFILE.supporting.leadRest}
+            <span className="text-[var(--text)]">{PROFILE.supporting.second}</span>
+            {PROFILE.supporting.secondRest}
+          </p>
+        </div>
 
-        <p className="mt-6 max-w-[60ch] text-body-lg text-[var(--dim)]">
-          <span className="text-[var(--text)]">{PROFILE.supporting.lead}</span>
-          {PROFILE.supporting.leadRest}
-          <span className="text-[var(--text)]">{PROFILE.supporting.second}</span>
-          {PROFILE.supporting.secondRest}
-        </p>
+        {/* Status line and actions on one rule, as a single instrument row. */}
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+          <p className="frame mono flex flex-1 items-center gap-2.5 px-4 py-3 text-[12.5px] text-[var(--dim)]">
+            <span
+              className="h-[7px] w-[7px] shrink-0 rounded-full bg-[var(--ok)]"
+              aria-hidden="true"
+            />
+            {PROFILE.availability}
+          </p>
 
-        <div className="mt-9 flex flex-wrap gap-3">
-          <Button href="#work">
-            See the work
-            <ArrowDown size={16} aria-hidden="true" />
-          </Button>
-          {/* Real download. To replace the PDF, see PROFILE.cvPath. */}
-          <Button href={PROFILE.cvPath} variant="glass" download>
-            <Download size={16} aria-hidden="true" />
-            Download CV (PDF, {PROFILE.cvSize})
-          </Button>
+          <div className="flex gap-3">
+            <Button href="#work" className="marks flex-1 sm:flex-none">
+              See the work
+              <ArrowDown size={16} aria-hidden="true" />
+            </Button>
+            {/* Real download. To replace the PDF, see PROFILE.cvPath. */}
+            <Button
+              href={PROFILE.cvPath}
+              variant="glass"
+              download
+              className="marks flex-1 sm:flex-none"
+            >
+              <Download size={16} aria-hidden="true" />
+              CV
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -74,11 +86,11 @@ export default function Home() {
         <StackedCards>
           <div className="flex flex-col gap-6">
             <Reveal>
-              <ProjectPanel project={lead} />
+              <ProjectPanel project={lead} index={1} />
             </Reveal>
             {rest.map((project, i) => (
               <Reveal key={project.slug} delay={0.07 * (i + 1)}>
-                <ProjectPanel project={project} />
+                <ProjectPanel project={project} index={i + 2} />
               </Reveal>
             ))}
           </div>

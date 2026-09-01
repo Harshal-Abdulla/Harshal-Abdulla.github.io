@@ -41,9 +41,9 @@ const config: Config = {
         meta: ["12.5px", { lineHeight: "1.5" }],
       },
       borderRadius: {
-        panel: "18px",
-        button: "10px",
-        tag: "6px",
+        panel: "2px",
+        button: "2px",
+        tag: "2px",
       },
       maxWidth: {
         // Part 5.4: body copy never exceeds 75 characters per line.

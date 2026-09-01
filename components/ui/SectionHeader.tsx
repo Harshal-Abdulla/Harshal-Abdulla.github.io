@@ -14,10 +14,11 @@ export default function SectionHeader({
 }) {
   return (
     <Reveal className="mb-10">
-      {eyebrow ? (
-        <p className="mono mb-3 text-meta text-[var(--dim)]">{eyebrow}</p>
-      ) : null}
-      <h2 id={id} className="text-section font-semibold text-[var(--text)]">
+      {eyebrow ? <p className="eyebrow mb-4">{eyebrow}</p> : null}
+      <h2
+        id={id}
+        className="marks inline-block pb-1 pl-3 pr-6 pt-1 text-section font-semibold text-[var(--text)]"
+      >
         {title}
       </h2>
       {intro ? (

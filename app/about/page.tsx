@@ -19,7 +19,10 @@ export default function About() {
   return (
     <div className="mx-auto max-w-shell px-5 pb-8 pt-28 sm:px-6 sm:pt-36">
       <div className="max-w-[760px]">
-        <h1 className="text-title font-semibold text-[var(--text)]">About</h1>
+        <p className="eyebrow mb-4">About</p>
+        <h1 className="marks inline-block pb-1 pl-3 pr-6 pt-1 text-title font-semibold text-[var(--text)]">
+          Harshal Abdulla
+        </h1>
 
         <div className="prose-measure mt-6 space-y-4 text-body-lg text-[var(--dim)]">
           <p>
@@ -124,8 +127,9 @@ export default function About() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Reveal as="section" className="mt-16">
-      <h2 className="text-section font-semibold text-[var(--text)]">{title}</h2>
-      <div className="mt-7 space-y-10 border-t border-[var(--stroke)] pt-7">
+      <p className="eyebrow mb-4">{title}</p>
+      <h2 className="sr-only">{title}</h2>
+      <div className="space-y-10 border-t border-[var(--stroke)] pt-7">
         {children}
       </div>
     </Reveal>
@@ -147,7 +151,7 @@ function TimelineItem({
 }) {
   return (
     <div className="grid gap-x-8 gap-y-2 sm:grid-cols-[150px_1fr]">
-      <p className="mono pt-1 text-meta text-[var(--dim)]">{period}</p>
+      <p className="mono pt-1 text-[11.5px] uppercase tracking-[0.1em] text-[var(--dim)]">{period}</p>
       <div>
         <h3 className="text-sub font-semibold text-[var(--text)]">{heading}</h3>
         {sub ? <p className="mt-1 text-body text-[var(--dim)]">{sub}</p> : null}
