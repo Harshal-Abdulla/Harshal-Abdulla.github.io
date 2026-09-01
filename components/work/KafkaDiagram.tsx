@@ -235,14 +235,14 @@ const BRANCHES: Record<ConsumerState, Leg[]> = {
       to: "consumer",
       ms: 700,
       lit: ["consumer"],
-      say: "FAILED means tried and failed, which is not the same thing as never attempted. The retry path takes over.",
+      say: "FAILED means tried and failed, which is not the same thing as never attempted. What follows is the design, not code that exists yet.",
     },
     {
       from: "consumer",
       to: "redis",
       ms: 600,
       lit: ["consumer", "redis"],
-      say: "Attempt 1 recorded in Redis. The count lives outside the process, because process memory resets to zero on restart.",
+      say: "Attempt 1 would be recorded in Redis. The count belongs outside the process, because process memory resets to zero on restart.",
       bumpRetry: true,
     },
     {
@@ -280,7 +280,7 @@ const BRANCHES: Record<ConsumerState, Leg[]> = {
       to: "dlq",
       ms: 950,
       lit: ["consumer", "dlq"],
-      say: "Dead-lettered. One poison message cannot block the partition forever, and there is a durable record of what went wrong.",
+      say: "Dead-lettered. One poison message cannot block the partition forever, and there is a durable record of what went wrong. This is the part still to be written.",
       vanish: true,
     },
   ],
@@ -383,8 +383,9 @@ export default function KafkaDiagram() {
       </div>
 
       <p className="mt-2 max-w-[62ch] text-body text-[var(--dim)]">
-        Pick a status for the row the consumer finds. The message follows the path
-        it would really take.
+        Pick a status for the row the consumer finds. The first three branches are
+        what the code does today. The FAILED branch is the design for the failure
+        path, which is not written yet.
       </p>
 
       {/* Controls. Real buttons, keyboard operable, and each one is a 44px tap

@@ -54,22 +54,21 @@ export const PROJECTS: Project[] = [
     slug: "notifications",
     title: "Fault-tolerant notification system",
     meta: "Personal · distributed systems",
-    // 1 Sept 2026: the retry pipeline described here was NOT implemented when
-    // this was first written. consumer.py handled only no-row, PENDING and
-    // SENT; redis was imported and never used. It is implemented now, with an
-    // end-to-end test covering every branch, so the claims below are true.
-    // What remains is scaling and observability, not core correctness.
-    status: "Delivery guarantees complete",
+    // Verified against the code on 1 Sept 2026. What is built: write-before-
+    // publish, and the consumer's no-row / PENDING / SENT branches. What is
+    // designed but NOT yet written: the FAILED retry path, Redis attempt
+    // counters, the dead-letter queue and the recovery sweep. Say so plainly;
+    // do not describe the unbuilt half as if it exists.
+    status: "Delivery path built, retry path designed",
     stack: ["Python", "Apache Kafka", "PostgreSQL", "Redis", "Docker Compose"],
     metrics: [
       { label: "what Kafka gives you", value: "At-least-once" },
       { label: "source of truth", value: "Postgres" },
       { label: "idempotency guard", value: "SELECT before UPDATE" },
-      { label: "branches covered by the end-to-end test", value: "11/11", tone: "ok" },
     ],
     summary: [
       "Kafka promises at-least-once delivery, which is a polite way of saying the same message will arrive twice. That duplicate is the actual design problem, and the naive send-a-notification function has no answer to it.",
-      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, retries failures on an exponential backoff with the attempt count held in Redis, and dead-letters anything that runs out of attempts.",
+      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, so a duplicate is a no-op rather than a second send. The failure path is designed and written up but not built yet.",
     ],
     repoUrl: "https://github.com/Harshal-Abdulla/Kafka-Notification-System",
     repoLabel: "Repository",
@@ -211,7 +210,7 @@ export const CONSUMER_DECISIONS: {
   {
     state: "FAILED",
     label: "FAILED",
-    action: "Retry with exponential backoff, then dead-letter after N attempts",
+    action: "Retry with exponential backoff, then dead-letter after N attempts (designed, not built yet)",
     why: "Distinguishes not tried yet from tried and failed. Collapsing the two loses the information the retry logic runs on.",
     tone: "fail",
   },
@@ -238,7 +237,8 @@ export const NOTIFICATION_PROBLEMS = [
 export const NOTIFICATION_NEXT = [
   "Consumer group scaling, and a partition-key strategy for ordering guarantees.",
   "Metrics on delivery latency and dead-letter queue volume.",
-  "A real provider behind the delivery boundary, so email, SMS and push share one contract. The seam exists; nothing is plugged into it yet.",
+  "The failure path itself: the FAILED branch, Redis attempt counters, exponential backoff and the dead-letter queue. Designed in detail, not written yet.",
+  "A provider abstraction so email, SMS and push share one delivery contract.",
 ];
 
 /* -------------------------------------------------------------------------

@@ -47,15 +47,16 @@ export default function NotificationsCaseStudy() {
               database or the consumer process crashes mid-flight.
             </p>
             <p>
-              The delivery guarantees are done and tested: the write-before-publish
-              ordering, the idempotency guard, retry with exponential backoff,
-              Redis-held attempt counts, the dead-letter queue, and a recovery
-              sweep for messages orphaned by a crash. An end-to-end test drives
-              all six against real Postgres, Kafka and Redis.
+              The delivery path is built: the producer writes a PENDING row and
+              commits before it publishes, and the consumer reads that row's
+              status before it acts, so a duplicate is a no-op rather than a
+              second send.
             </p>
             <p>
-              What is left is scaling and observability rather than correctness,
-              and it is listed at the bottom of this page.
+              The failure path is designed but not written yet. The retry
+              branch below, the attempt counters in Redis and the dead-letter
+              queue are how it will work, not how it currently works. I would
+              rather say that than let you find out by reading the repository.
             </p>
           </CaseSection>
 

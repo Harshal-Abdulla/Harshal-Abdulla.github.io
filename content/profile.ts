@@ -62,7 +62,7 @@ export const PROFILE = {
    *   page all read these two values.
    */
   cvPath: "/Harshal-Abdulla-CV-2026-09.pdf",
-  cvSize: "111 KB",
+  cvSize: "110 KB",
 
   education: [
     {

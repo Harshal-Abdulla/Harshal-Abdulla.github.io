@@ -119,7 +119,7 @@
 <div class="item">
   <div class="item-head">
     <span class="item-title">Fault-tolerant notification system</span>
-    <span class="item-meta">Personal &middot; 2026</span>
+    <span class="item-meta">Personal &middot; in progress</span>
   </div>
   <ul>
     <li>Distributed delivery pipeline built so a message is never silently lost and never sent
@@ -128,11 +128,9 @@
         between the two leaves a durable record that a recovery sweep picks up.</li>
     <li>Consumer reads row status before acting (SELECT before UPDATE), which makes it idempotent
         by design and absorbs Kafka's at-least-once duplicates as a no-op.</li>
-    <li>Exponential backoff with a dead-letter queue, and retry counters held in Redis rather
-        than process memory: process memory resets on restart so a poison message would loop
-        forever, and parallel consumers would each keep a separate count.</li>
-    <li>End-to-end test drives all six behaviours against real Postgres, Kafka and Redis,
-        including a message dead-lettering after its attempts are spent.</li>
+    <li>Failure path designed but not yet built: exponential backoff with a dead-letter queue,
+        and retry counters in Redis rather than process memory, because process memory resets
+        on restart and parallel consumers would each keep a separate count.</li>
   </ul>
   <p class="stack"><b>Stack:</b> Python, Apache Kafka, PostgreSQL, Redis, Docker Compose
     &nbsp;&middot;&nbsp; github.com/Harshal-Abdulla/Kafka-Notification-System</p>
