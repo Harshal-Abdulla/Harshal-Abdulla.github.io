@@ -109,7 +109,7 @@ export default function Home() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-button text-[15px] font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
                       >
-                        Live demo
+                        {item.title === "Solas" ? "Download the app" : "Live demo"}
                         <ArrowUpRight size={15} aria-hidden="true" />
                       </a>
                     ) : null}
