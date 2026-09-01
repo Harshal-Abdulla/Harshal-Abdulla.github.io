@@ -152,16 +152,20 @@
 <div class="item">
   <div class="item-head">
     <span class="item-title">Twix</span>
-    <span class="item-meta">Group MSc project, team of five &middot; 2025</span>
+    <span class="item-meta">Group MSc project, team of five &middot; December 2024</span>
   </div>
   <ul>
-    <li>Led a team of five building a real-time chat application. My own share of the work was
-        the interface and the testing.</li>
-    <li>Based the layout on Twitter so all five of us had a single reference to build against,
-        rather than designing the interface from scratch and arguing about it.</li>
-    <li>Schema designed to stay consistent with several people connected and sending at once.</li>
+    <li>Led a team of five building a Twitter-style microblog: search for a user, follow and
+        unfollow them, post tweets up to 250 characters, read a feed of who you follow.</li>
+    <li>My own share of the work was the interface and the testing. Based the layout on Twitter
+        so all five of us had a single reference to build against, rather than designing it from
+        scratch and arguing about it.</li>
+    <li>Followers are notified through an observer-pattern implementation in the backend. The
+        feed polls the REST API every three seconds.</li>
   </ul>
-  <p class="stack"><b>Stack:</b> Java, WebSockets, PostgreSQL, React, TypeScript, Vite, Axios, Bootstrap</p>
+  <p class="stack"><b>Stack:</b> Java 21, Spring Boot 3.4, PostgreSQL, Spring Data JPA, React,
+    TypeScript, Vite, Axios, Bootstrap
+    &nbsp;&middot;&nbsp; github.com/Harshal-Abdulla/twix</p>
 </div>
 
 <div class="item">
@@ -219,9 +223,9 @@
 
 <h2>Technical skills</h2>
 <div class="skills">
-  <div><b>Languages</b> TypeScript, JavaScript, Python, SQL</div>
+  <div><b>Languages</b> TypeScript, JavaScript, Python, SQL, Java</div>
   <div><b>Frontend</b> React, React Native, Next.js, Expo, Zustand, Tailwind CSS</div>
-  <div><b>Backend &amp; data</b> Node.js, Express, PostgreSQL, Supabase, MongoDB, Redis, REST</div>
+  <div><b>Backend &amp; data</b> Node.js, Express, Spring Boot, PostgreSQL, Supabase, MongoDB, Redis, REST</div>
   <div><b>Infrastructure</b> Apache Kafka, Docker Compose, GitHub Actions, Git</div>
   <div><b>Testing</b> Property-based testing, test design, row level security policy testing</div>
 </div>

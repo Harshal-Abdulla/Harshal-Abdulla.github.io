@@ -250,20 +250,23 @@ export const ALSO_BUILT: {
 }[] = [
   {
     title: "Twix",
-    // Harshal recalled 2024, the brief says 2025, and he could not remember
-    // which was right when asked on 31 Aug 2026. Left at 2025 per the brief.
-    meta: "Group MSc project · 2025 · team of five",
+    // Date settled by the git history, 1 Sept 2026: every commit is December
+    // 2024. Harshal remembered 2024 and the brief said 2025. He was right.
+    meta: "Group MSc project · December 2024 · team of five",
     lines: [
-      "Real-time chat. A Java and WebSockets backend over PostgreSQL, and a React, TypeScript and Vite frontend using Axios and Bootstrap.",
+      // Corrected 1 Sept 2026 after reading the actual code. It was described
+      // as real-time chat over WebSockets. It is neither: there is no socket
+      // dependency and no socket code anywhere, the feed polls every three
+      // seconds, and the modules are users, tweets and followers rather than
+      // messages. Do not reintroduce the WebSocket claim.
+      "A Twitter-style microblog. You search for someone, follow them, post tweets up to 250 characters, and read a feed of the people you follow.",
+      "Java and Spring Boot over PostgreSQL, with a React, TypeScript and Vite frontend using Axios and Bootstrap. Followers get notified through an observer-pattern implementation in the backend, and the feed polls the API every three seconds rather than holding a connection open.",
       // "Led" confirmed by Harshal, 31 Aug 2026: he led Twix. He did NOT lead
       // SyncUp, where more experienced people were on the team, and nothing
       // below claims he did. Keep it that way.
       "I led the team of five, and my own share of the work was the interface and the testing. I based the layout on Twitter, so all five of us had one reference to build against instead of designing the thing from scratch and arguing about it.",
-      "The schema had to stay consistent with several people connected and sending at once, which is most of the difficulty in a chat app.",
     ],
-    // Not on GitHub anywhere: not on his account, not in the group org, not in
-    // public search. Presumably a college or private repo.
-    repoUrl: undefined,
+    repoUrl: "https://github.com/Harshal-Abdulla/twix",
   },
   {
     title: "SyncUp",
