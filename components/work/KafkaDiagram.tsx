@@ -1,31 +1,131 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { m, useReducedMotion } from "framer-motion";
 import { CONSUMER_DECISIONS, type ConsumerState } from "@/content/projects";
 
 /* ---------------------------------------------------------------------------
-   Geometry. One place to move a box.
---------------------------------------------------------------------------- */
+   Geometry.
 
-const W = 660;
-const H = 404;
+   Two layouts, because a wide diagram squeezed onto a phone is not a diagram,
+   it is a horizontal scrollbar. The landscape version is the real architecture
+   drawing; the portrait version says exactly the same thing in one column, so
+   nothing on a phone has to be dragged sideways to be read.
+
+   Node identity, captions and branch logic are shared. Only coordinates,
+   connector paths and edge wording differ.
+--------------------------------------------------------------------------- */
 
 type NodeId = "producer" | "postgres" | "kafka" | "consumer" | "redis" | "dlq";
 
-const NODES: Record<NodeId, { x: number; y: number; label: string; sub: string }> = {
-  producer: { x: 96, y: 52, label: "Producer", sub: "" },
-  postgres: { x: 540, y: 52, label: "PostgreSQL", sub: "source of truth" },
-  kafka: { x: 318, y: 196, label: "Kafka", sub: "" },
-  consumer: { x: 540, y: 196, label: "Consumer", sub: "" },
-  redis: { x: 540, y: 336, label: "Redis", sub: "retry counters" },
-  dlq: { x: 318, y: 336, label: "Dead-letter queue", sub: "" },
+const LABELS: Record<NodeId, { label: string; sub: string }> = {
+  producer: { label: "Producer", sub: "" },
+  postgres: { label: "PostgreSQL", sub: "source of truth" },
+  kafka: { label: "Kafka", sub: "" },
+  consumer: { label: "Consumer", sub: "" },
+  redis: { label: "Redis", sub: "retry counters" },
+  dlq: { label: "Dead-letter queue", sub: "" },
 };
 
-const BOX_W = 152;
-const BOX_H = 56;
+interface EdgeSpec {
+  d: string;
+  label: string;
+  lx: number;
+  ly: number;
+  anchor?: "middle" | "start" | "end";
+}
 
-const pt = (id: NodeId): [number, number] => [NODES[id].x, NODES[id].y];
+interface Layout {
+  w: number;
+  h: number;
+  boxW: number;
+  boxH: number;
+  titleSize: number;
+  subSize: number;
+  edgeSize: number;
+  nodes: Record<NodeId, { x: number; y: number }>;
+  edges: EdgeSpec[];
+  /** Waypoints the travelling token follows, keyed "from->to". */
+  elbows: Record<string, [number, number][]>;
+  /** Forces a horizontal scroll only when the diagram genuinely needs one. */
+  minWidth: string;
+}
+
+const WIDE: Layout = {
+  w: 660,
+  h: 404,
+  boxW: 152,
+  boxH: 56,
+  titleSize: 13.5,
+  subSize: 10,
+  edgeSize: 10.5,
+  nodes: {
+    producer: { x: 96, y: 52 },
+    postgres: { x: 540, y: 52 },
+    kafka: { x: 318, y: 196 },
+    consumer: { x: 540, y: 196 },
+    redis: { x: 540, y: 336 },
+    dlq: { x: 318, y: 336 },
+  },
+  edges: [
+    { d: "M 172 52 H 464", label: "[1] write PENDING", lx: 318, ly: 40 },
+    { d: "M 96 80 V 196 H 242", label: "[2] publish", lx: 112, ly: 140, anchor: "start" },
+    { d: "M 394 196 H 464", label: "[3] consume", lx: 429, ly: 184 },
+    { d: "M 540 168 V 80", label: "read status", lx: 552, ly: 128, anchor: "start" },
+    { d: "M 540 224 V 308", label: "retry count", lx: 552, ly: 270, anchor: "start" },
+    { d: "M 464 336 H 394", label: "exhausted", lx: 429, ly: 324 },
+  ],
+  elbows: {
+    "producer->kafka": [[96, 196]],
+    "consumer->dlq": [[540, 336]],
+  },
+  minWidth: "560px",
+};
+
+const NARROW: Layout = {
+  w: 340,
+  h: 512,
+  boxW: 96,
+  boxH: 44,
+  titleSize: 11,
+  subSize: 7.5,
+  edgeSize: 8.5,
+  nodes: {
+    producer: { x: 84, y: 40 },
+    postgres: { x: 256, y: 40 },
+    kafka: { x: 84, y: 172 },
+    consumer: { x: 84, y: 304 },
+    redis: { x: 256, y: 304 },
+    dlq: { x: 256, y: 436 },
+  },
+  edges: [
+    { d: "M 132 40 H 204", label: "[1] write", lx: 168, ly: 30 },
+    { d: "M 84 62 V 146", label: "[2] publish", lx: 92, ly: 108, anchor: "start" },
+    { d: "M 84 194 V 278", label: "[3] consume", lx: 92, ly: 240, anchor: "start" },
+    { d: "M 132 292 H 170 V 50 H 204", label: "read status", lx: 176, ly: 176, anchor: "start" },
+    { d: "M 132 318 H 204", label: "retry", lx: 168, ly: 336 },
+    { d: "M 84 326 V 436 H 204", label: "exhausted", lx: 92, ly: 392, anchor: "start" },
+  ],
+  elbows: {
+    "consumer->postgres": [
+      [170, 304],
+      [170, 50],
+    ],
+    "postgres->consumer": [
+      [170, 50],
+      [170, 304],
+    ],
+    "consumer->dlq": [[84, 436]],
+  },
+  // A portrait diagram fits a phone, so nothing is forced wider than the page.
+  minWidth: "0px",
+};
 
 /* ---------------------------------------------------------------------------
    Branches. Each leg is one hop the token makes, the nodes it lights up, and
@@ -35,8 +135,6 @@ const pt = (id: NodeId): [number, number] => [NODES[id].x, NODES[id].y];
 interface Leg {
   from: NodeId;
   to: NodeId;
-  /** Optional elbow waypoint, so the token follows the drawn connector. */
-  via?: [number, number];
   ms: number;
   lit: NodeId[];
   say: string;
@@ -56,7 +154,6 @@ const WRITE: Leg = {
 const PUBLISH: Leg = {
   from: "producer",
   to: "kafka",
-  via: [96, 196],
   ms: 900,
   lit: ["producer", "kafka"],
   say: "[2] Only now does the producer publish to Kafka. Crash between the two and the row is still there for the recovery sweep.",
@@ -193,8 +290,27 @@ const BRANCHES: Record<ConsumerState, Leg[]> = {
    Component
 --------------------------------------------------------------------------- */
 
+/**
+ * Picks the portrait layout below 640px. useSyncExternalStore rather than
+ * useEffect so the server and the first client render agree, instead of the
+ * diagram visibly reflowing after hydration.
+ */
+function useLayout(): Layout {
+  const isNarrow = useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia("(max-width: 639px)");
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(max-width: 639px)").matches,
+    () => false,
+  );
+  return isNarrow ? NARROW : WIDE;
+}
+
 export default function KafkaDiagram() {
   const reduced = useReducedMotion();
+  const layout = useLayout();
   const [branch, setBranch] = useState<ConsumerState | null>(null);
   const [leg, setLeg] = useState(0);
   const [retries, setRetries] = useState(0);
@@ -214,7 +330,7 @@ export default function KafkaDiagram() {
 
   // Pauses when off-screen. It also plays the PENDING branch once as an
   // invitation the first time it is scrolled to, and then never again on its
-  // own: after that it answers a click and nothing else.
+  // own: after that it answers a tap and nothing else.
   useEffect(() => {
     const node = rootRef.current;
     if (!node) return;
@@ -244,28 +360,25 @@ export default function KafkaDiagram() {
     return () => window.clearTimeout(t);
   }, [reduced, inView, current, leg]);
 
-  // Which boxes are lit, and what the caption says.
-  const lit: NodeId[] = reduced && branch ? litForWholeBranch(branch) : (current?.lit ?? []);
-  const caption = reduced && branch
-    ? BRANCHES[branch][BRANCHES[branch].length - 1].say
-    : (current?.say ?? (done ? legs[legs.length - 1].say : ""));
+  const lit: NodeId[] =
+    reduced && branch ? litForWholeBranch(branch) : (current?.lit ?? []);
+  const caption =
+    reduced && branch
+      ? BRANCHES[branch][BRANCHES[branch].length - 1].say
+      : (current?.say ?? (done ? legs[legs.length - 1].say : ""));
   const shownRetries = reduced && branch === "FAILED" ? 3 : retries;
 
-  const tokenTarget = current
-    ? tokenKeyframes(current)
-    : null;
+  const token = current ? tokenKeyframes(current, layout) : null;
 
   return (
-    <div
-      ref={rootRef}
-      className="panel overflow-hidden p-5 sm:p-7"
-    >
+    <div ref={rootRef} className="panel overflow-hidden p-4 sm:p-7">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
         <h3 className="text-sub font-semibold text-[var(--text)]">
           What the consumer does, and why
         </h3>
         <p className="mono text-meta text-[var(--dim)]">
-          Redis retry count: <span className="text-[var(--text)]">{shownRetries}</span>
+          Redis retry count:{" "}
+          <span className="text-[var(--text)]">{shownRetries}</span>
         </p>
       </div>
 
@@ -274,9 +387,13 @@ export default function KafkaDiagram() {
         it would really take.
       </p>
 
-      {/* Controls. Real buttons, keyboard operable, with the pressed state
-          exposed rather than only drawn. */}
-      <div className="mt-6 flex flex-wrap gap-2.5" role="group" aria-label="Consumer states">
+      {/* Controls. Real buttons, keyboard operable, and each one is a 44px tap
+          target on a phone rather than something you have to aim at. */}
+      <div
+        className="mt-6 grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap"
+        role="group"
+        aria-label="Consumer states"
+      >
         {CONSUMER_DECISIONS.map((d) => {
           const active = branch === d.state;
           return (
@@ -285,7 +402,7 @@ export default function KafkaDiagram() {
               type="button"
               onClick={() => select(d.state)}
               aria-pressed={active}
-              className={`mono rounded-button border px-3.5 py-2 text-[13px] transition-all duration-[180ms] ${
+              className={`mono min-h-[44px] rounded-button border px-3.5 py-2 text-[13px] transition-all duration-[180ms] ${
                 active
                   ? "border-[var(--accent)] bg-[var(--accent)] font-medium text-[#0B0E14]"
                   : "border-[var(--stroke)] bg-[var(--glass)] text-[var(--text)] hover:border-[var(--stroke-bright)] hover:bg-[var(--glass-strong)]"
@@ -297,13 +414,14 @@ export default function KafkaDiagram() {
         })}
       </div>
 
-      {/* The diagram. */}
+      {/* The diagram. Landscape on a laptop, portrait on a phone. */}
       <div className="mt-7 overflow-x-auto">
         <svg
-          viewBox={`0 0 ${W} ${H}`}
+          viewBox={`0 0 ${layout.w} ${layout.h}`}
           role="img"
           aria-labelledby="kafka-svg-title kafka-svg-desc"
-          className="h-auto w-full min-w-[560px]"
+          className="h-auto w-full"
+          style={{ minWidth: layout.minWidth }}
         >
           <title id="kafka-svg-title">
             Architecture of the notification pipeline
@@ -331,28 +449,22 @@ export default function KafkaDiagram() {
             </marker>
           </defs>
 
-          {/* Connectors, drawn once and never animated. */}
-          <Edge d={`M ${172} 52 H ${464}`} label="[1] write PENDING" lx={318} ly={40} />
-          <Edge d={`M 96 80 V 196 H ${242}`} label="[2] publish" lx={112} ly={140} anchor="start" />
-          <Edge d={`M ${394} 196 H ${464}`} label="[3] consume" lx={429} ly={184} />
-          <Edge d={`M ${540} 168 V 80`} label="read status" lx={552} ly={128} anchor="start" />
-          <Edge d={`M ${540} 224 V 308`} label="retry count" lx={552} ly={270} anchor="start" />
-          <Edge d={`M ${464} 336 H ${394}`} label="exhausted" lx={429} ly={324} />
-
-          {/* Boxes. */}
-          {(Object.keys(NODES) as NodeId[]).map((id) => (
-            <Box key={id} id={id} lit={lit.includes(id)} />
+          {layout.edges.map((e) => (
+            <Edge key={e.label} spec={e} size={layout.edgeSize} />
           ))}
 
-          {/* The travelling token. Never rendered under reduced motion. */}
-          {!reduced && tokenTarget ? (
+          {(Object.keys(LABELS) as NodeId[]).map((id) => (
+            <Box key={id} id={id} lit={lit.includes(id)} layout={layout} />
+          ))}
+
+          {!reduced && token ? (
             <m.circle
-              r="7"
+              r={layout === NARROW ? 5.5 : 7}
               fill="var(--accent)"
               initial={false}
               animate={{
-                cx: tokenTarget.cx,
-                cy: tokenTarget.cy,
+                cx: token.cx,
+                cy: token.cy,
                 opacity: current?.vanish ? [1, 1, 0] : 1,
               }}
               transition={{
@@ -364,7 +476,6 @@ export default function KafkaDiagram() {
         </svg>
       </div>
 
-      {/* One line on what just happened. Announced, not only drawn. */}
       <p
         aria-live="polite"
         className="mt-5 min-h-[3.2rem] max-w-[68ch] border-l-2 border-[var(--accent)] pl-4 text-body text-[var(--dim)]"
@@ -372,14 +483,14 @@ export default function KafkaDiagram() {
         {caption || "Pick a state above to run the message through."}
       </p>
 
-      {/* The text equivalent. Nothing on this diagram is conveyed by the
-          animation alone. */}
+      {/* The text equivalent. On a phone each row becomes its own block, so the
+          table never has to be dragged sideways either. */}
       <div className="mt-8 overflow-x-auto">
-        <table className="w-full min-w-[520px] border-collapse text-left">
+        <table className="w-full border-collapse text-left max-sm:block">
           <caption className="sr-only">
             What the consumer does for each row status it finds
           </caption>
-          <thead>
+          <thead className="max-sm:hidden">
             <tr className="border-b border-[var(--stroke)]">
               <th scope="col" className="pb-3 pr-4 text-meta font-normal text-[var(--dim)]">
                 Status found
@@ -392,27 +503,29 @@ export default function KafkaDiagram() {
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="max-sm:block">
             {CONSUMER_DECISIONS.map((d) => {
               const active = branch === d.state;
               return (
                 <tr
                   key={d.state}
                   aria-current={active ? "true" : undefined}
-                  className={`border-b border-[var(--stroke)] transition-colors last:border-b-0 ${
-                    active ? "bg-[var(--glass-strong)]" : ""
+                  className={`border-b border-[var(--stroke)] transition-colors last:border-b-0 max-sm:mb-3 max-sm:block max-sm:rounded-panel max-sm:border max-sm:p-4 ${
+                    active
+                      ? "bg-[var(--glass-strong)] max-sm:border-[var(--accent)]"
+                      : ""
                   }`}
                 >
                   <th
                     scope="row"
-                    className={`mono py-4 pr-4 align-top text-[13px] font-normal ${
+                    className={`mono py-4 pr-4 align-top text-[13px] font-normal max-sm:block max-sm:py-0 ${
                       active ? "text-[var(--accent)]" : "text-[var(--text)]"
                     }`}
                   >
                     {d.label}
                   </th>
                   <td
-                    className={`py-4 pr-4 align-top text-body ${
+                    className={`py-4 pr-4 align-top text-body max-sm:block max-sm:py-1 ${
                       d.tone === "ok"
                         ? "text-[var(--ok)]"
                         : d.tone === "fail"
@@ -422,7 +535,9 @@ export default function KafkaDiagram() {
                   >
                     {d.action}
                   </td>
-                  <td className="py-4 align-top text-body text-[var(--dim)]">{d.why}</td>
+                  <td className="py-4 align-top text-body text-[var(--dim)] max-sm:block max-sm:py-0">
+                    {d.why}
+                  </td>
                 </tr>
               );
             })}
@@ -437,51 +552,52 @@ export default function KafkaDiagram() {
    Pieces
 --------------------------------------------------------------------------- */
 
-function Edge({
-  d,
-  label,
-  lx,
-  ly,
-  anchor = "middle",
-}: {
-  d: string;
-  label: string;
-  lx: number;
-  ly: number;
-  anchor?: "middle" | "start";
-}) {
+function Edge({ spec, size }: { spec: EdgeSpec; size: number }) {
   return (
     <g>
       <path
-        d={d}
+        d={spec.d}
         fill="none"
         stroke="var(--stroke-bright)"
         strokeWidth="1"
         markerEnd="url(#arrow)"
       />
       <text
-        x={lx}
-        y={ly}
-        textAnchor={anchor}
+        x={spec.lx}
+        y={spec.ly}
+        textAnchor={spec.anchor ?? "middle"}
         className="mono"
-        fontSize="10.5"
+        fontSize={size}
         fill="var(--dim)"
       >
-        {label}
+        {spec.label}
       </text>
     </g>
   );
 }
 
-function Box({ id, lit }: { id: NodeId; lit: boolean }) {
-  const n = NODES[id];
+function Box({
+  id,
+  lit,
+  layout,
+}: {
+  id: NodeId;
+  lit: boolean;
+  layout: Layout;
+}) {
+  const n = layout.nodes[id];
+  const meta = LABELS[id];
+  // The long name does not fit a phone-width box.
+  const title = layout === NARROW && id === "dlq" ? "DLQ" : meta.label;
+  const showSub = meta.sub !== "" && layout !== NARROW;
+
   return (
     <g>
       <rect
-        x={n.x - BOX_W / 2}
-        y={n.y - BOX_H / 2}
-        width={BOX_W}
-        height={BOX_H}
+        x={n.x - layout.boxW / 2}
+        y={n.y - layout.boxH / 2}
+        width={layout.boxW}
+        height={layout.boxH}
         rx="10"
         fill={lit ? "rgba(240,165,56,0.13)" : "rgba(255,255,255,0.045)"}
         stroke={lit ? "var(--accent)" : "var(--stroke)"}
@@ -490,24 +606,24 @@ function Box({ id, lit }: { id: NodeId; lit: boolean }) {
       />
       <text
         x={n.x}
-        y={n.sub ? n.y - 2 : n.y + 4}
+        y={showSub ? n.y - 2 : n.y + layout.titleSize / 3}
         textAnchor="middle"
-        fontSize="13.5"
+        fontSize={layout.titleSize}
         fontWeight="500"
         fill="var(--text)"
       >
-        {n.label}
+        {title}
       </text>
-      {n.sub ? (
+      {showSub ? (
         <text
           x={n.x}
           y={n.y + 14}
           textAnchor="middle"
           className="mono"
-          fontSize="10"
+          fontSize={layout.subSize}
           fill="var(--dim)"
         >
-          {n.sub}
+          {meta.sub}
         </text>
       ) : null}
     </g>
@@ -518,14 +634,16 @@ function Box({ id, lit }: { id: NodeId; lit: boolean }) {
    Helpers
 --------------------------------------------------------------------------- */
 
-/** Keyframes for one leg, including the elbow waypoint where there is one. */
-function tokenKeyframes(leg: Leg): { cx: number[]; cy: number[] } {
-  const [fx, fy] = pt(leg.from);
-  const [tx, ty] = pt(leg.to);
-  if (leg.via) {
-    return { cx: [fx, leg.via[0], tx], cy: [fy, leg.via[1], ty] };
-  }
-  return { cx: [fx, tx], cy: [fy, ty] };
+/** Keyframes for one leg, following any elbows the active layout defines. */
+function tokenKeyframes(leg: Leg, layout: Layout): { cx: number[]; cy: number[] } {
+  const from = layout.nodes[leg.from];
+  const to = layout.nodes[leg.to];
+  const mid = layout.elbows[`${leg.from}->${leg.to}`] ?? [];
+
+  return {
+    cx: [from.x, ...mid.map((p) => p[0]), to.x],
+    cy: [from.y, ...mid.map((p) => p[1]), to.y],
+  };
 }
 
 /** Under reduced motion the whole path is lit at once rather than in sequence. */
