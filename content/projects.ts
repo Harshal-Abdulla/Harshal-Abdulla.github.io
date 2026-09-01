@@ -54,18 +54,22 @@ export const PROJECTS: Project[] = [
     slug: "notifications",
     title: "Fault-tolerant notification system",
     meta: "Personal · distributed systems",
-    // Part 4.4 is explicit: label this honestly. Naming what is left reads
-    // better than a completion badge that is not true.
-    status: "In progress, around 80%",
+    // 1 Sept 2026: the retry pipeline described here was NOT implemented when
+    // this was first written. consumer.py handled only no-row, PENDING and
+    // SENT; redis was imported and never used. It is implemented now, with an
+    // end-to-end test covering every branch, so the claims below are true.
+    // What remains is scaling and observability, not core correctness.
+    status: "Delivery guarantees complete",
     stack: ["Python", "Apache Kafka", "PostgreSQL", "Redis", "Docker Compose"],
     metrics: [
       { label: "what Kafka gives you", value: "At-least-once" },
       { label: "source of truth", value: "Postgres" },
       { label: "idempotency guard", value: "SELECT before UPDATE" },
+      { label: "branches covered by the end-to-end test", value: "11/11", tone: "ok" },
     ],
     summary: [
       "Kafka promises at-least-once delivery, which is a polite way of saying the same message will arrive twice. That duplicate is the actual design problem, and the naive send-a-notification function has no answer to it.",
-      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts. Everything else follows from that ordering.",
+      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, retries failures on an exponential backoff with the attempt count held in Redis, and dead-letters anything that runs out of attempts.",
     ],
     repoUrl: "https://github.com/Harshal-Abdulla/Kafka-Notification-System",
     repoLabel: "Repository",
@@ -234,7 +238,7 @@ export const NOTIFICATION_PROBLEMS = [
 export const NOTIFICATION_NEXT = [
   "Consumer group scaling, and a partition-key strategy for ordering guarantees.",
   "Metrics on delivery latency and dead-letter queue volume.",
-  "A provider abstraction so email, SMS and push share one delivery contract.",
+  "A real provider behind the delivery boundary, so email, SMS and push share one contract. The seam exists; nothing is plugged into it yet.",
 ];
 
 /* -------------------------------------------------------------------------
@@ -267,6 +271,16 @@ export const ALSO_BUILT: {
       "I led the team of five, and my own share of the work was the interface and the testing. I based the layout on Twitter, so all five of us had one reference to build against instead of designing the thing from scratch and arguing about it.",
     ],
     repoUrl: "https://github.com/Harshal-Abdulla/twix",
+  },
+  {
+    title: "Local AI Chat",
+    meta: "Personal \u00b7 Android \u00b7 2026",
+    lines: [
+      "An Android app that runs Google's Gemma 2B entirely on the phone, with no internet connection after the model is downloaded and no subscription.",
+      "Kotlin over MediaPipe Tasks GenAI. Tokens stream back as they are generated, and the conversation history is rebuilt into a Gemma-format prompt on every turn, which is what gives it memory of what you said earlier.",
+      "It shows an accuracy warning on first launch. A 2B model on a phone gets things wrong, and saying so is better than letting someone find out.",
+    ],
+    repoUrl: "https://github.com/Harshal-Abdulla/local-ai-android",
   },
   {
     title: "SyncUp",

@@ -47,9 +47,15 @@ export default function NotificationsCaseStudy() {
               database or the consumer process crashes mid-flight.
             </p>
             <p>
-              It is around 80% done. The core delivery path, the idempotency
-              guard and the retry pipeline all work. What is left is listed at
-              the bottom of this page.
+              The delivery guarantees are done and tested: the write-before-publish
+              ordering, the idempotency guard, retry with exponential backoff,
+              Redis-held attempt counts, the dead-letter queue, and a recovery
+              sweep for messages orphaned by a crash. An end-to-end test drives
+              all six against real Postgres, Kafka and Redis.
+            </p>
+            <p>
+              What is left is scaling and observability rather than correctness,
+              and it is listed at the bottom of this page.
             </p>
           </CaseSection>
 
