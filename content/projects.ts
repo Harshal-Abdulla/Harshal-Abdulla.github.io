@@ -272,11 +272,14 @@ export const ALSO_BUILT: {
     title: "SyncUp",
     meta: "Group MSc project · 2025",
     lines: [
-      "A kanban task tool built with Node.js, Express, MongoDB and React. Users register, log in, and move tasks across To Do, In Progress and Done.",
+      // Corrected 1 Sept 2026 after reading the code, same as Twix. It was
+      // called a kanban tool with To Do / In Progress / Done columns. Task.js
+      // has a boolean completed field, not a three-state one, and the UI is a
+      // filterable list with a checkbox, not a drag-and-drop board.
+      "A task tool built with Node.js, Express, MongoDB and React. Tasks belong to groups and can be private, shared with a group, or public, and each can be tagged and marked complete.",
       "Full CRUD over a REST API, with password hashing using bcryptjs.",
       // Claims nothing else. No Docker, no role-based access control, no CI/CD,
-      // no FastAPI. Older CVs claim some of these. They are wrong. JWT is fine
-      // to say: the auth routes issue and verify tokens.
+      // no FastAPI. JWT is fine: the auth routes issue and verify tokens.
     ],
     demoUrl: "https://sync-up-rosy-psi.vercel.app",
     repoUrl: "https://github.com/Harshal-Abdulla/SyncUp",
