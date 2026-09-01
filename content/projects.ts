@@ -276,13 +276,14 @@ export const ALSO_BUILT: {
     // The app calls itself Solas, which is what it is named in strings.xml and
     // on screen. The repository README still says "Local AI Chat".
     title: "Solas",
-    meta: "Personal \u00b7 Android \u00b7 2026",
+    meta: "Personal \u00b7 Android \u00b7 in progress",
     lines: [
       "An Android app that runs Google's Gemma 2B entirely on the phone. No internet once the model is downloaded, no subscription, and nothing leaves the device.",
       "Kotlin over MediaPipe Tasks GenAI. Tokens stream back as they are generated, and the conversation history is rebuilt into a Gemma-format prompt on every turn, which is what gives it memory of what you said earlier.",
-      "It shows an accuracy warning on first launch. A 2B model on a phone gets things wrong, and saying so up front is better than letting someone find out.",
+      "An early build rather than a finished app. It runs and it answers, but it is rough, unsigned, and not packaged for anyone to install yet. The code is there to read.",
     ],
-    demoUrl: "https://github.com/Harshal-Abdulla/local-ai-android/releases/tag/v1.0",
+    // Deliberately no download. It is not a release build and should not be
+    // offered as one; the repository link is the honest thing to point at.
     repoUrl: "https://github.com/Harshal-Abdulla/local-ai-android",
   },
   {
