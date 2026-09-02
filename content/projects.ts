@@ -270,6 +270,11 @@ export const ALSO_BUILT: {
       // below claims he did. Keep it that way.
       "I led the team of five, and my own share of the work was the interface and the testing. I based the layout on Twitter, so all five of us had one reference to build against instead of designing the thing from scratch and arguing about it.",
     ],
+    // Live 2 Sept 2026. Two containers in one Vercel project: nginx serving the
+    // built frontend, Spring Boot behind /api. Cold start is a few seconds
+    // because the backend is a JVM that scales to zero; warm it answers in
+    // about 300ms.
+    demoUrl: "https://frontend-nu-nine-pnw4fl7dvt.vercel.app",
     repoUrl: "https://github.com/Harshal-Abdulla/twix",
   },
   {
