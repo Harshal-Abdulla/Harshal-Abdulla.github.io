@@ -285,7 +285,7 @@ export const ALSO_BUILT: {
     lines: [
       "An Android app that runs Google's Gemma 2B entirely on the phone. No internet once the model is downloaded, no subscription, and nothing leaves the device.",
       "Kotlin over MediaPipe Tasks GenAI. Tokens stream back as they are generated, and the conversation history is rebuilt into a Gemma-format prompt on every turn, which is what gives it memory of what you said earlier.",
-      "Still rough in places, but it runs, it answers, and there is a signed APK on the releases page if you want to try it. You need a free Kaggle account to download a model on first run, which is the clumsiest part of it.",
+      "There is a signed APK on the releases page, and chats are saved so a conversation carries on where you left it. Four of the models download with no account at all, from 160 MB up to 3.8 GB depending on the phone. There is an iPhone version too, though iOS will not let you install an app from a website, so that one has to be built in Xcode.",
     ],
     // Deliberately no download. It is not a release build and should not be
     // offered as one; the repository link is the honest thing to point at.
