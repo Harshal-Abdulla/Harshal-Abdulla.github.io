@@ -285,7 +285,7 @@ export const ALSO_BUILT: {
     lines: [
       "An Android app that runs Google's Gemma 2B entirely on the phone. No internet once the model is downloaded, no subscription, and nothing leaves the device.",
       "Kotlin over MediaPipe Tasks GenAI. Tokens stream back as they are generated, and the conversation history is rebuilt into a Gemma-format prompt on every turn, which is what gives it memory of what you said earlier.",
-      "An early build rather than a finished app. It runs and it answers, but it is rough, unsigned, and not packaged for anyone to install yet. The code is there to read.",
+      "Still rough in places, but it runs, it answers, and there is a signed APK on the releases page if you want to try it. You need a free Kaggle account to download a model on first run, which is the clumsiest part of it.",
     ],
     // Deliberately no download. It is not a release build and should not be
     // offered as one; the repository link is the honest thing to point at.
