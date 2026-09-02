@@ -278,9 +278,9 @@ export const ALSO_BUILT: {
     repoUrl: "https://github.com/Harshal-Abdulla/twix",
   },
   {
-    // The app calls itself Solas, which is what it is named in strings.xml and
+    // The app calls itself Ashling, which is what it is named in strings.xml and
     // on screen. The repository README still says "Local AI Chat".
-    title: "Solas",
+    title: "Ashling",
     meta: "Personal \u00b7 Android \u00b7 in progress",
     lines: [
       "An Android app that runs Google's Gemma 2B entirely on the phone. No internet once the model is downloaded, no subscription, and nothing leaves the device.",
@@ -289,7 +289,7 @@ export const ALSO_BUILT: {
     ],
     // Deliberately no download. It is not a release build and should not be
     // offered as one; the repository link is the honest thing to point at.
-    repoUrl: "https://github.com/Harshal-Abdulla/local-ai-android",
+    repoUrl: "https://github.com/Harshal-Abdulla/ashling-android",
   },
   {
     title: "SyncUp",
