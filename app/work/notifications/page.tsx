@@ -14,7 +14,7 @@ const project = projectBySlug("notifications");
 export const metadata: Metadata = {
   title: "Fault-tolerant notification system",
   description:
-    "A distributed notification pipeline built so a message is never silently lost and never delivered twice, even when the broker, the database or the consumer crashes mid-flight.",
+    "A Kafka notification pipeline in Python that skips duplicate messages, retries failed sends, and picks up where it left off when the consumer restarts.",
 };
 
 const SECTIONS = [
@@ -31,8 +31,8 @@ export default function NotificationsCaseStudy() {
   return (
     <>
       <CaseStudyHeader
-        title="A message that is never lost and never sent twice"
-        summary="A distributed notification pipeline that holds its guarantees when the broker, the database or the consumer process dies partway through the job."
+        title="A notification pipeline that keeps working when things fail"
+        summary="A Kafka notification pipeline that skips duplicate messages and retries failed sends, and picks up where it left off when the consumer restarts."
         status={project.status}
         stack="Python · Apache Kafka · PostgreSQL · Redis · Docker Compose"
         links={[{ label: "Repository", href: project.repoUrl }]}
@@ -42,21 +42,25 @@ export default function NotificationsCaseStudy() {
         <div className="min-w-0 lg:order-1">
           <CaseSection id="what" title="What it is">
             <p>
-              A notification delivery system that guarantees a message is never
-              silently lost and never delivered twice, even when the broker, the
-              database or the consumer process crashes mid-flight.
+              A notification pipeline in Python that keeps working when things
+              fail: a consumer that crashes, a send that fails, or a message that
+              Kafka delivers twice.
             </p>
             <p>
-              The delivery path is built: the producer writes a PENDING row and
-              commits before it publishes, and the consumer reads that row's
-              status before it acts, so a duplicate is a no-op rather than a
-              second send.
+              The producer writes a PENDING row and commits before it publishes,
+              and the consumer reads that row&apos;s status before it acts, so a
+              message that was already sent is skipped rather than sent again. A
+              failed send is retried after 1, 2, 4, 8 and 16 seconds, Redis keeps
+              the attempt count with an atomic INCR, and after the sixth failure
+              the id goes to a dead letter topic and the row is marked FAILED.
             </p>
             <p>
-              The failure path is designed but not written yet. The retry
-              branch below, the attempt counters in Redis and the dead-letter
-              queue are how it will work, not how it currently works. I would
-              rather say that than let you find out by reading the repository.
+              Two limits are worth knowing. It is at-least-once, not
+              exactly-once: if the consumer crashes after a send succeeds but
+              before the row is marked SENT, that notification goes out twice.
+              And if the producer crashes between saving the row and publishing
+              it, the row stays PENDING, because the job that would republish it
+              is not built yet.
             </p>
           </CaseSection>
 
@@ -89,8 +93,9 @@ export default function NotificationsCaseStudy() {
               </p>
               <p>
                 If the process dies after the insert and before the publish, the
-                row is still sitting there and a recovery sweep picks it up using
-                the row timestamps. Reverse the two and a crash leaves a message
+                row is still sitting there as PENDING, so there is a record to
+                recover from. The job that would republish it is not built yet.
+                Reverse the two and a crash leaves a message
                 in flight with no durable record that it ever existed, which is
                 the failure nobody can debug afterwards.
               </p>
@@ -105,10 +110,10 @@ export default function NotificationsCaseStudy() {
             </p>
             <KafkaDiagram />
             <p className="prose-measure mt-7 text-body text-[var(--dim)]">
-              PENDING and FAILED are not interchangeable. One means never
-              attempted and the other means attempted and failed. Collapse them
-              into a single status and you throw away the information the retry
-              logic runs on.
+              PENDING and FAILED are not interchangeable. One means not sent yet
+              and the other means it failed six times and was given up on.
+              Collapse them and a message that has already been dead-lettered
+              would be retried all over again.
             </p>
           </CaseSection>
 
@@ -129,19 +134,20 @@ export default function NotificationsCaseStudy() {
           <CaseSection id="why-both" title="Why both Postgres and Redis">
             <p>
               Postgres is the source of truth and it is written on every message,
-              always. Redis is fast and forgettable. Losing it costs speed and
-              never costs correctness.
+              always. Redis is fast and forgettable. Losing it can cost a few
+              extra retries, and it never makes a status wrong.
             </p>
             <p>
               It is a performance layer, not a backup, and it is worth being
               precise about that because the two get confused constantly. If Redis
-              disappears the retry counts go with it and delivery gets slower.
-              Nothing becomes wrong.
+              disappears the retry counts go with it, so a notification may get a
+              few extra retries. The final status is still correct.
             </p>
             <p>
-              Retries use exponential backoff, then a dead-letter queue once the
-              attempts are spent, so one poison message cannot hold a partition
-              hostage.
+              After the fifth retry, about 31 seconds in, the id goes to the dead
+              letter topic, so a message that keeps failing does not loop
+              forever. While it waits, though, the consumer waits with it: the
+              backoff is a plain sleep, so the messages behind it are held up.
             </p>
           </CaseSection>
 

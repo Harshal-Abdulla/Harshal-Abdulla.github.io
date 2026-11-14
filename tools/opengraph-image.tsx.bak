@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "Harshal Abdulla. I build systems that are not allowed to get money or messages wrong.";
+  "Harshal Abdulla. I build backend systems that handle money and messages.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
@@ -41,7 +41,7 @@ export default function Image() {
             maxWidth: "960px",
           }}
         >
-          I build systems that are not allowed to get money or messages wrong.
+          I build backend systems that handle money and messages.
         </div>
         <div style={{ display: "flex", fontSize: 26, color: "#A2A9B8" }}>
           Associate software engineer, Ireland

@@ -30,7 +30,7 @@ const LABELS: Record<NodeId, { label: string; sub: string }> = {
   kafka: { label: "Kafka", sub: "" },
   consumer: { label: "Consumer", sub: "" },
   redis: { label: "Redis", sub: "retry counters" },
-  dlq: { label: "Dead-letter queue", sub: "" },
+  dlq: { label: "Dead letter topic", sub: "" },
 };
 
 interface EdgeSpec {
@@ -138,7 +138,8 @@ interface Leg {
   ms: number;
   lit: NodeId[];
   say: string;
-  bumpRetry?: boolean;
+  /** Sets the Redis attempt count shown above the diagram. */
+  retries?: number;
   /** The token fades out at the end of this leg rather than resting. */
   vanish?: boolean;
 }
@@ -156,7 +157,7 @@ const PUBLISH: Leg = {
   to: "kafka",
   ms: 900,
   lit: ["producer", "kafka"],
-  say: "[2] Only now does the producer publish to Kafka. Crash between the two and the row is still there for the recovery sweep.",
+  say: "[2] Only now does the producer publish to Kafka. Crash between the two and the row is still there as PENDING, though nothing republishes it yet.",
 };
 
 const CONSUME: Leg = {
@@ -223,9 +224,9 @@ const BRANCHES: Record<ConsumerState, Leg[]> = {
     },
   ],
   FAILED: [
-    // Starts at the producer, like every other branch. The row exists and was
-    // published normally; what makes this branch different is what the consumer
-    // finds when it looks, not how the message got there.
+    // How a row gets to FAILED, as consumer.py does it on 14 Nov 2026. A row
+    // the consumer finds already FAILED is skipped, the same as SENT; the last
+    // line says so.
     WRITE,
     PUBLISH,
     CONSUME,
@@ -233,54 +234,53 @@ const BRANCHES: Record<ConsumerState, Leg[]> = {
     {
       from: "postgres",
       to: "consumer",
-      ms: 700,
+      ms: 800,
       lit: ["consumer"],
-      say: "FAILED means tried and failed, which is not the same thing as never attempted. What follows is the design, not code that exists yet.",
+      say: "PENDING, so it tries to send. The send fails.",
     },
     {
       from: "consumer",
       to: "redis",
-      ms: 600,
+      ms: 700,
       lit: ["consumer", "redis"],
-      say: "Attempt 1 would be recorded in Redis. The count belongs outside the process, because process memory resets to zero on restart.",
-      bumpRetry: true,
+      say: "Redis INCR makes the attempt count 1. It lives outside the consumer, so a restart does not reset it.",
+      retries: 1,
     },
     {
-      from: "redis",
+      from: "consumer",
+      to: "kafka",
+      ms: 800,
+      lit: ["consumer", "kafka"],
+      say: "After a 1 second wait, the id is published to Kafka again.",
+    },
+    {
+      from: "kafka",
       to: "consumer",
-      ms: 600,
-      lit: ["consumer", "redis"],
-      say: "Backoff, then retry. Delivery fails again.",
+      ms: 900,
+      lit: ["kafka", "consumer"],
+      say: "It comes back round, still PENDING, and fails again. The wait doubles each time: 2, 4, 8, then 16 seconds.",
     },
     {
       from: "consumer",
       to: "redis",
-      ms: 600,
+      ms: 800,
       lit: ["consumer", "redis"],
-      say: "Attempt 2. The interval grows each time, so a struggling provider is not hammered.",
-      bumpRetry: true,
-    },
-    {
-      from: "redis",
-      to: "consumer",
-      ms: 600,
-      lit: ["consumer", "redis"],
-      say: "Backoff, then retry. Still failing.",
-    },
-    {
-      from: "consumer",
-      to: "redis",
-      ms: 600,
-      lit: ["consumer", "redis"],
-      say: "Attempt 3. Attempts are now exhausted.",
-      bumpRetry: true,
+      say: "The sixth failure takes the count to 6, about 31 seconds after the first try.",
+      retries: 6,
     },
     {
       from: "consumer",
       to: "dlq",
       ms: 950,
       lit: ["consumer", "dlq"],
-      say: "Dead-lettered. One poison message cannot block the partition forever, and there is a durable record of what went wrong. This is the part still to be written.",
+      say: "The id goes to the dead letter topic, notifications-dlq, so it stops looping.",
+    },
+    {
+      from: "consumer",
+      to: "postgres",
+      ms: 900,
+      lit: ["consumer", "postgres"],
+      say: "The row is marked FAILED, to be looked at by hand. If Kafka delivers this id again, the consumer sees FAILED and skips it.",
       vanish: true,
     },
   ],
@@ -354,7 +354,7 @@ export default function KafkaDiagram() {
   useEffect(() => {
     if (reduced || !inView || !current) return;
 
-    if (current.bumpRetry) setRetries((r) => r + 1);
+    if (current.retries !== undefined) setRetries(current.retries);
 
     const t = window.setTimeout(() => setLeg((i) => i + 1), current.ms);
     return () => window.clearTimeout(t);
@@ -366,7 +366,7 @@ export default function KafkaDiagram() {
     reduced && branch
       ? BRANCHES[branch][BRANCHES[branch].length - 1].say
       : (current?.say ?? (done ? legs[legs.length - 1].say : ""));
-  const shownRetries = reduced && branch === "FAILED" ? 3 : retries;
+  const shownRetries = reduced && branch === "FAILED" ? 6 : retries;
 
   const token = current ? tokenKeyframes(current, layout) : null;
 
@@ -383,9 +383,8 @@ export default function KafkaDiagram() {
       </div>
 
       <p className="mt-2 max-w-[62ch] text-body text-[var(--dim)]">
-        Pick a status for the row the consumer finds. The first three branches are
-        what the code does today. The FAILED branch is the design for the failure
-        path, which is not written yet.
+        Pick a status for the row the consumer finds. FAILED shows how a row gets
+        there: the send keeps failing until the retries run out.
       </p>
 
       {/* Controls. Real buttons, keyboard operable, and each one is a 44px tap
@@ -430,10 +429,11 @@ export default function KafkaDiagram() {
           <desc id="kafka-svg-desc">
             The producer writes a PENDING row to PostgreSQL, then publishes to
             Kafka. A consumer reads from Kafka, checks the row status in
-            PostgreSQL, and either delivers the notification, drops it, skips it
-            as a duplicate, or retries it using counters held in Redis before
-            routing it to a dead-letter queue. The same information is in the
-            table below this diagram.
+            PostgreSQL, and either delivers the notification, drops it, or skips
+            it as already SENT or FAILED. When a send fails it counts the attempt
+            in Redis and republishes the id, and after the sixth failure moves it
+            to a dead letter topic and marks the row FAILED. The same information
+            is in the table below this diagram.
           </desc>
 
           <defs>

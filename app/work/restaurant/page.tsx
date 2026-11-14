@@ -41,7 +41,7 @@ export default function RestaurantCaseStudy() {
         title="I built a till, then I built the thing that proves it is right"
         summary="A commercial ordering system running every day in a restaurant in Co. Kildare. One Expo codebase, four surfaces, one Postgres database, and one developer."
         status={project.status}
-        stack="TypeScript 5.9 · React 19.2 · React Native 0.81.5 · Expo SDK 54 · Zustand 5.0 · Postgres via Supabase · Row level security"
+        stack="TypeScript 5.9 · React 19.2 · React Native 0.81.5 · Expo SDK 54 · Zustand 5.0 · Postgres via Supabase"
         links={[
           { label: "Interactive pricing demo", href: project.demoUrl },
           { label: "Demo source", href: project.repoUrl },
@@ -60,10 +60,9 @@ export default function RestaurantCaseStudy() {
               menu.
             </p>
             <p>
-              I am the only developer on it. It went from nothing to running in
-              seven weeks, in 154 commits between 13 July and 30 August 2026,
-              built and maintained alongside running the kitchen. In August it
-              took 251 orders and rang in 1,474 dishes.
+              I am the only developer on it. It has been in production for four
+              months, built and maintained alongside running the kitchen. In
+              August it took 251 orders and rang in 1,474 dishes.
             </p>
             <p>
               The code is private, because it is a client&apos;s live system. I am
@@ -200,9 +199,8 @@ export default function RestaurantCaseStudy() {
               <p>
                 I showed the owner the measurement and the owner chose to leave it.
                 Rewriting a live pricing rule mid-service to recover 43 cents was
-                not a trade worth making. So the guarantee the decision rests on,
-                that the house is never undercharged, was written down as a test
-                that runs on every change.
+                not a trade worth making. The rule was left as it is, with a test
+                guarding it that runs on every change.
               </p>
             </div>
 
@@ -256,8 +254,8 @@ export default function RestaurantCaseStudy() {
             <Reveal className="mt-8">
               <p className="prose-measure text-body text-[var(--dim)]">
                 Alongside those: 50 meal deals, 110 uses of{" "}
-                <span className="mono text-[14px]">security definer</span>, 31 row
-                level security policies, two pg_cron jobs, 18 runtime dependencies
+                <span className="mono text-[14px]">security definer</span>, two
+                pg_cron jobs, 18 runtime dependencies
                 and 3 dev dependencies, and a 2.5 MB static bundle.
               </p>
             </Reveal>

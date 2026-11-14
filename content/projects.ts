@@ -35,12 +35,12 @@ export const PROJECTS: Project[] = [
     title: "Restaurant ordering and till system",
     meta: "Commercial · sole developer · Co. Kildare",
     status: "Running in production",
-    stack: ["TypeScript 5.9", "React 19.2", "Expo SDK 54", "Postgres", "Supabase RLS"],
+    stack: ["TypeScript 5.9", "React 19.2", "Expo SDK 54", "Postgres"],
     metrics: [
-      { label: "commits in seven weeks", value: "154" },
+      { label: "schema migrations shipped live", value: "94" },
       { label: "lines of TypeScript", value: "15,109" },
       { label: "generated test cases per run", value: "560,015" },
-      { label: "times the house was undercharged", value: "0", tone: "ok" },
+      { label: "months in production", value: "4", tone: "ok" },
     ],
     summary: [
       "A till that takes real money in a restaurant in Co. Kildare, every day. One Expo codebase drives four surfaces against one Postgres database, and I am the only person who works on it.",
@@ -54,12 +54,13 @@ export const PROJECTS: Project[] = [
     slug: "notifications",
     title: "Fault-tolerant notification system",
     meta: "Personal · distributed systems",
-    // Verified against the code on 1 Sept 2026. What is built: write-before-
-    // publish, and the consumer's no-row / PENDING / SENT branches. What is
-    // designed but NOT yet written: the FAILED retry path, Redis attempt
-    // counters, the dead-letter queue and the recovery sweep. Say so plainly;
-    // do not describe the unbuilt half as if it exists.
-    status: "Delivery path built, retry path designed",
+    // Verified against consumer.py and the README on 14 Nov 2026. Built:
+    // write-before-publish, the status checks, retries after 1, 2, 4, 8 and 16
+    // seconds counted in Redis with INCR, and the dead letter topic after the
+    // sixth failure. NOT built: a recovery job for PENDING rows the producer
+    // never published. It is at-least-once, not exactly-once, so nothing on
+    // this site should promise exactly-once delivery.
+    status: "Built: delivery, retries and dead letter topic",
     stack: ["Python", "Apache Kafka", "PostgreSQL", "Redis", "Docker Compose"],
     metrics: [
       { label: "what Kafka gives you", value: "At-least-once" },
@@ -68,7 +69,7 @@ export const PROJECTS: Project[] = [
     ],
     summary: [
       "Kafka promises at-least-once delivery, which is a polite way of saying the same message will arrive twice. That duplicate is the actual design problem, and the naive send-a-notification function has no answer to it.",
-      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, so a duplicate is a no-op rather than a second send. The failure path is designed and written up but not built yet.",
+      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, so a duplicate is a no-op rather than a second send. A failed send is retried after 1, 2, 4, 8 and 16 seconds, Redis keeps the attempt count with an atomic INCR, and after the sixth failure the id goes to a dead letter topic and the row is marked FAILED.",
     ],
     repoUrl: "https://github.com/Harshal-Abdulla/Kafka-Notification-System",
     repoLabel: "Repository",
@@ -124,10 +125,9 @@ export const RESTAURANT_SURFACES = [
 ];
 
 export const RESTAURANT_FIGURES: Metric[] = [
-  { label: "commits, 13 July to 30 August 2026", value: "154" },
   { label: "lines of TypeScript and TSX", value: "15,109" },
   { label: "SQL migrations, 12,469 lines", value: "94" },
-  { label: "Postgres functions behind RLS", value: "~70" },
+  { label: "Postgres functions", value: "~70" },
   { label: "properties in the test suite", value: "43" },
   { label: "generated cases per run, about a second", value: "560,015" },
   { label: "orders taken, August 2026", value: "251" },
@@ -148,7 +148,7 @@ export const RESTAURANT_DECISIONS = [
   {
     n: "03",
     title: "There is no application server",
-    body: "Static hosting plus row level security removes a whole tier that would otherwise need deploying, patching and monitoring by one person who also runs a kitchen. The client talks to Postgres through PostgREST, and RLS is the boundary.",
+    body: "Static hosting removes a whole tier that would otherwise need deploying, patching and monitoring by one person who also runs a kitchen. The client talks to Postgres directly through PostgREST.",
   },
   {
     n: "04",
@@ -163,7 +163,6 @@ export const PRICING_ROWS: Metric[] = [
   { label: "Charged above the cheapest possible arrangement", value: "42.1%" },
   { label: "Average gap when it happens", value: "€0.43" },
   { label: "Worst single basket", value: "€1.95" },
-  { label: "Times the house was undercharged", value: "0", tone: "ok" },
 ];
 
 export const RESTAURANT_GAPS = [
@@ -196,7 +195,7 @@ export const CONSUMER_DECISIONS: {
   {
     state: "PENDING",
     label: "PENDING",
-    action: "Deliver, then flip to SENT only after delivery is confirmed",
+    action: "Deliver, then flip to SENT only after delivery is confirmed. A failed send is retried with backoff",
     why: "Flipping the row before delivery would mark an unsent message as sent, which is the one lie the system must never tell.",
     tone: "ok",
   },
@@ -210,8 +209,8 @@ export const CONSUMER_DECISIONS: {
   {
     state: "FAILED",
     label: "FAILED",
-    action: "Retry with exponential backoff, then dead-letter after N attempts (designed, not built yet)",
-    why: "Distinguishes not tried yet from tried and failed. Collapsing the two loses the information the retry logic runs on.",
+    action: "Skip. The id is already on the dead letter topic",
+    why: "A row is marked FAILED after its sixth failed send. Keeping it apart from PENDING is what stops a message that has been given up on from being retried all over again.",
     tone: "fail",
   },
 ];
@@ -220,7 +219,7 @@ export const NOTIFICATION_PROBLEMS = [
   {
     n: "01",
     title: "The ordering problem",
-    body: "Postgres has to be written before Kafka, not after. If the process dies between the two, the PENDING row is still there and a recovery sweep finds it. Reversed, the crash leaves a message in flight with no durable record that it ever existed.",
+    body: "Postgres has to be written before Kafka, not after. If the process dies between the two, the PENDING row is still there, so there is a durable record to recover from. The job that republishes those rows is not built yet. Reversed, the crash leaves a message in flight with no durable record that it ever existed.",
   },
   {
     n: "02",
@@ -237,7 +236,7 @@ export const NOTIFICATION_PROBLEMS = [
 export const NOTIFICATION_NEXT = [
   "Consumer group scaling, and a partition-key strategy for ordering guarantees.",
   "Metrics on delivery latency and dead-letter queue volume.",
-  "The failure path itself: the FAILED branch, Redis attempt counters, exponential backoff and the dead-letter queue. Designed in detail, not written yet.",
+  "A recovery job that republishes PENDING rows the producer saved but never got to publish.",
   "A provider abstraction so email, SMS and push share one delivery contract.",
 ];
 
@@ -278,20 +277,6 @@ export const ALSO_BUILT: {
     repoUrl: "https://github.com/Harshal-Abdulla/twix",
   },
   {
-    // The app calls itself Ashling, which is what it is named in strings.xml and
-    // on screen. The repository README still says "Local AI Chat".
-    title: "Ashling",
-    meta: "Personal \u00b7 Android \u00b7 in progress",
-    lines: [
-      "An Android app that runs Google's Gemma 2B entirely on the phone. No internet once the model is downloaded, no subscription, and nothing leaves the device.",
-      "Kotlin over MediaPipe Tasks GenAI. Tokens stream back as they are generated, and the conversation history is rebuilt into a Gemma-format prompt on every turn, which is what gives it memory of what you said earlier.",
-      "There is a signed APK on the releases page, and chats are saved so a conversation carries on where you left it. Four of the models download with no account at all, from 160 MB up to 3.8 GB depending on the phone. There is an iPhone version too, though iOS will not let you install an app from a website, so that one has to be built in Xcode.",
-    ],
-    // Deliberately no download. It is not a release build and should not be
-    // offered as one; the repository link is the honest thing to point at.
-    repoUrl: "https://github.com/Harshal-Abdulla/ashling-android",
-  },
-  {
     title: "SyncUp",
     meta: "Group MSc project · 2025",
     lines: [
@@ -306,5 +291,19 @@ export const ALSO_BUILT: {
     ],
     demoUrl: "https://sync-up-rosy-psi.vercel.app",
     repoUrl: "https://github.com/Harshal-Abdulla/SyncUp",
+  },
+  {
+    // Both sentences come from the repwise README (~/code/repwise, 13 Nov
+    // 2026): sections 1 and 2, and the 2.10.0 changelog for real weights.
+    // Unreleased, so deliberately no download, store or repository link, no
+    // user numbers and no screenshots. The last line is there on purpose, as a
+    // dated public record of the name.
+    title: "RepWise",
+    meta: "Personal project, in testing. Version 2.11 coming soon.",
+    lines: [
+      "A gym coach that plans each week's workouts from what you actually logged, using double progression and only weights your equipment can make, and does the planning on the phone with no internet needed.",
+      "An Android app with a plain Java shell around an HTML, CSS and JavaScript interface, with the coaching engine written in plain JavaScript and tested in Node.",
+      "RepWise, by Harshal Abdulla, 2026",
+    ],
   },
 ];

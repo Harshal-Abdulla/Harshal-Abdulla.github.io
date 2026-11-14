@@ -9,8 +9,8 @@ import CountUp from "@/components/motion/CountUp";
  * beneath in dim text, left-aligned in their columns.
  *
  * Exactly one figure per ledger carries colour, and it is the one that carries
- * the argument. On the restaurant project that is "times the house was
- * undercharged: 0". Never colour more than one.
+ * the argument. On the restaurant project that is "months in production:
+ * 4". Never colour more than one.
  */
 export default function Ledger({
   metrics,

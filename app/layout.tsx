@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s — Harshal Abdulla",
   },
   description:
-    "I build systems that are not allowed to get money or messages wrong. A commercial restaurant till, and a notification pipeline that will not lose or duplicate a message. Associate software engineer, Ireland.",
+    "I build backend systems that handle money and messages. A commercial restaurant till, and a Kafka notification pipeline that skips duplicate messages and retries failed sends. Associate software engineer, Ireland.",
   authors: [{ name: PROFILE.name, url: SITE_URL }],
   openGraph: {
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "Harshal Abdulla, software engineer",
     description:
-      "A commercial restaurant till, and a notification pipeline that will not lose or duplicate a message. Associate software engineer, Ireland.",
+      "A commercial restaurant till, and a Kafka notification pipeline that skips duplicate messages and retries failed sends. Associate software engineer, Ireland.",
     // A committed file, like every other image here. See tools/README.md to
     // regenerate it.
     images: [
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Harshal Abdulla. I build systems that are not allowed to get money or messages wrong.",
+        alt: "Harshal Abdulla. I build backend systems that handle money and messages.",
       },
     ],
   },

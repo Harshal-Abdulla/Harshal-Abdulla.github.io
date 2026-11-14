@@ -33,16 +33,16 @@ export const PROFILE = {
   location: "Leixlip, Co. Kildare, Ireland",
 
   // Part 4.2. The positioning line, first person, no adjectives about himself.
-  headline: "I build systems that are not allowed to get money or messages wrong.",
+  headline: "I build backend systems that handle money and messages.",
 
   // Rendered with the project names at full weight and the rest dimmed, so the
   // eye lands on what he built rather than on the connective tissue.
   supporting: {
     lead: "A restaurant till",
     leadRest: " running daily in Co. Kildare, and a ",
-    second: "notification pipeline",
+    second: "Kafka notification pipeline",
     secondRest:
-      " that will not lose or duplicate a message. MSc Computer Science, Maynooth, First Class Honours.",
+      " that skips duplicate messages and retries failed sends. MSc Computer Science, Maynooth, First Class Honours.",
   },
 
   // Screeners look for this line and its absence costs shortlists. One sentence.
@@ -61,8 +61,8 @@ export const PROFILE = {
    *   downloads it. Nothing else needs touching: the nav, the hero and the about
    *   page all read these two values.
    */
-  cvPath: "/Harshal-Abdulla-CV-2026-09.pdf",
-  cvSize: "103 KB",
+  cvPath: "/Harshal-Abdulla-CV-2026-11.pdf",
+  cvSize: "36 KB",
 
   education: [
     {
