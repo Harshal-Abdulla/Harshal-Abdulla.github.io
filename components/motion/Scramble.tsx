@@ -114,12 +114,22 @@ export function Scramble({
     };
   }, [text]);
 
+  // Settled, the real string is rendered exactly once. Rendering it twice (a
+  // visible copy plus a screen-reader copy) put every scrambled label in the
+  // page text twice, which is what copy-paste, search engines and anything
+  // that reads the page saw. The hidden copy now exists only during the second
+  // or so that the visible glyphs are noise.
+  const scrambling = display !== text;
   return (
     <span ref={ref} className={className}>
-      {/* The accessible name never changes, whatever the visible glyphs are
-          doing. A screen reader reads the label, not the noise. */}
-      <span aria-hidden="true">{display}</span>
-      <span className="sr-only">{text}</span>
+      {scrambling ? (
+        <>
+          <span aria-hidden="true">{display}</span>
+          <span className="sr-only">{text}</span>
+        </>
+      ) : (
+        text
+      )}
     </span>
   );
 }

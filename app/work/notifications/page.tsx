@@ -22,7 +22,7 @@ const SECTIONS = [
   { id: "problem", label: "The problem" },
   { id: "architecture", label: "Architecture" },
   { id: "consumer", label: "What the consumer does" },
-  { id: "three", label: "Three problems solved" },
+  { id: "three", label: "Three problems, and what each one costs" },
   { id: "why-both", label: "Postgres and Redis" },
   { id: "next", label: "What is next" },
 ];
@@ -32,7 +32,7 @@ export default function NotificationsCaseStudy() {
     <>
       <CaseStudyHeader
         title="A notification pipeline that keeps working when things fail"
-        summary="A Kafka notification pipeline that skips duplicate messages and retries failed sends, and picks up where it left off when the consumer restarts."
+        summary="A Kafka notification pipeline that skips duplicate messages and retries failed sends, and picks up where it left off when the consumer restarts. It is at-least-once, not exactly-once; the known limits are below."
         status={project.status}
         stack="Python · Apache Kafka · PostgreSQL · Redis · Docker Compose"
         links={[{ label: "Repository", href: project.repoUrl }]}
@@ -52,7 +52,8 @@ export default function NotificationsCaseStudy() {
               message that was already sent is skipped rather than sent again. A
               failed send is retried after 1, 2, 4, 8 and 16 seconds, Redis keeps
               the attempt count with an atomic INCR, and after the sixth failure
-              the id goes to a dead letter topic and the row is marked FAILED.
+              the id goes to the dead letter topic notifications-dlq and the
+              row is marked FAILED.
             </p>
             <p>
               Two limits are worth knowing. It is at-least-once, not
@@ -106,7 +107,9 @@ export default function NotificationsCaseStudy() {
             <p className="prose-measure mb-7 text-body text-[var(--dim)]">
               On every message the consumer reads the row&apos;s status first, then
               acts. That SELECT before the UPDATE is what makes it idempotent by
-              design rather than idempotent by accident.
+              design rather than idempotent by accident. The consumer runs in
+              group notification-workers, so Kafka saves its offset and a
+              restarted consumer carries on where it stopped.
             </p>
             <KafkaDiagram />
             <p className="prose-measure mt-7 text-body text-[var(--dim)]">
@@ -145,7 +148,7 @@ export default function NotificationsCaseStudy() {
             </p>
             <p>
               After the fifth retry, about 31 seconds in, the id goes to the dead
-              letter topic, so a message that keeps failing does not loop
+              letter topic notifications-dlq, so a message that keeps failing does not loop
               forever. While it waits, though, the consumer waits with it: the
               backoff is a plain sleep, so the messages behind it are held up.
             </p>

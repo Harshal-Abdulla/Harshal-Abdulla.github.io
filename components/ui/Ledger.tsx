@@ -1,5 +1,6 @@
 import type { Metric } from "@/content/projects";
 import CountUp from "@/components/motion/CountUp";
+import LiveDays from "@/components/motion/LiveDays";
 
 /**
  * The figure ledger. Part 6.4.
@@ -9,8 +10,8 @@ import CountUp from "@/components/motion/CountUp";
  * beneath in dim text, left-aligned in their columns.
  *
  * Exactly one figure per ledger carries colour, and it is the one that carries
- * the argument. On the restaurant project that is "months in production:
- * 4". Never colour more than one.
+ * the argument. On the restaurant project that is "days in production",
+ * which counts up by itself. Never colour more than one.
  */
 export default function Ledger({
   metrics,
@@ -40,7 +41,13 @@ export default function Ledger({
                   : "text-[var(--text)]"
             }`}
           >
-            {countUp ? <CountUp value={m.value} /> : m.value}
+            {m.since ? (
+              <LiveDays since={m.since} fallback={m.value} countUp={countUp} />
+            ) : countUp ? (
+              <CountUp value={m.value} />
+            ) : (
+              m.value
+            )}
           </dd>
           <dt className="mono mt-2 text-[11px] uppercase leading-snug tracking-[0.1em] text-[var(--dim)]">{m.label}</dt>
         </div>

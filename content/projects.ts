@@ -5,11 +5,22 @@
  * The restaurant figures were measured on 30 and 31 August 2026.
  */
 
+import { daysSince } from "@/lib/daysSince";
+
+/**
+ * The day the till went live: "2026-07-23 DEPLOYED LIVE" in the kiosk repo's
+ * docs/PROGRESS.md, at bombay-bistro-kiosk.surge.sh. The days-in-production
+ * figure counts up from here by itself, every day, with no rebuild needed.
+ */
+export const RESTAURANT_LIVE_SINCE = "2026-07-23";
+
 export interface Metric {
   label: string;
   value: string;
   /** At most one metric per ledger is highlighted. Part 6.4. */
   tone?: "ok" | "fail";
+  /** A day count from this ISO date, kept current in the browser. */
+  since?: string;
 }
 
 export interface Project {
@@ -40,7 +51,12 @@ export const PROJECTS: Project[] = [
       { label: "schema migrations shipped live", value: "94" },
       { label: "lines of TypeScript", value: "15,109" },
       { label: "generated test cases per run", value: "560,015" },
-      { label: "months in production", value: "4", tone: "ok" },
+      {
+        label: "days in production",
+        value: String(daysSince(RESTAURANT_LIVE_SINCE)),
+        since: RESTAURANT_LIVE_SINCE,
+        tone: "ok",
+      },
     ],
     summary: [
       "A till that takes real money in a restaurant in Co. Kildare, every day. One Expo codebase drives four surfaces against one Postgres database, and I am the only person who works on it.",
@@ -69,7 +85,7 @@ export const PROJECTS: Project[] = [
     ],
     summary: [
       "Kafka promises at-least-once delivery, which is a polite way of saying the same message will arrive twice. That duplicate is the actual design problem, and the naive send-a-notification function has no answer to it.",
-      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, so a duplicate is a no-op rather than a second send. A failed send is retried after 1, 2, 4, 8 and 16 seconds, Redis keeps the attempt count with an atomic INCR, and after the sixth failure the id goes to a dead letter topic and the row is marked FAILED.",
+      "The producer writes a PENDING row to Postgres before it publishes. The consumer reads the row's status before it acts, so a duplicate is a no-op rather than a second send. A failed send is retried after 1, 2, 4, 8 and 16 seconds, Redis keeps the attempt count with an atomic INCR, and after the sixth failure the id goes to the dead letter topic notifications-dlq and the row is marked FAILED.",
     ],
     repoUrl: "https://github.com/Harshal-Abdulla/Kafka-Notification-System",
     repoLabel: "Repository",
@@ -209,7 +225,7 @@ export const CONSUMER_DECISIONS: {
   {
     state: "FAILED",
     label: "FAILED",
-    action: "Skip. The id is already on the dead letter topic",
+    action: "Skip. The id is already on notifications-dlq",
     why: "A row is marked FAILED after its sixth failed send. Keeping it apart from PENDING is what stops a message that has been given up on from being retried all over again.",
     tone: "fail",
   },
@@ -229,13 +245,13 @@ export const NOTIFICATION_PROBLEMS = [
   {
     n: "03",
     title: "The retry counter problem",
-    body: "The count cannot live in the consumer's memory. Process memory resets to zero on restart, so a poison message would loop forever and never reach the dead-letter queue. Run two consumers and each keeps its own separate count for the same message, which breaks horizontal scaling outright.",
+    body: "The count cannot live in the consumer's memory. Process memory resets to zero on restart, so a poison message would loop forever and never reach notifications-dlq. Run two consumers and each keeps its own separate count for the same message, which breaks horizontal scaling outright.",
   },
 ];
 
 export const NOTIFICATION_NEXT = [
-  "Consumer group scaling, and a partition-key strategy for ordering guarantees.",
-  "Metrics on delivery latency and dead-letter queue volume.",
+  "Scaling to more consumers, and a partition-key strategy for ordering guarantees.",
+  "Metrics on delivery latency and on how many ids reach notifications-dlq.",
   "A recovery job that republishes PENDING rows the producer saved but never got to publish.",
   "A provider abstraction so email, SMS and push share one delivery contract.",
 ];
